@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.constraintlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -67,8 +68,28 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    implementation(libs.ui)
+    //noinspection UseTomlInstead
+    implementation("androidx.compose.material:material:1.7.4")
+
+    implementation(libs.ui.tooling.preview)
+    debugImplementation(libs.ui.tooling)
+
+    // Optional - Integration with activities
+    implementation (libs.androidx.activity.compose.v191)
+    // Optional - Integration with ViewModels
+    implementation (libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.ktx.v284)
+
+    implementation (libs.androidx.constraintlayout.compose)
+
+
     //retrofit2
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
+
+    //coil
+    implementation(libs.coil.compose)
+    implementation(libs.coil.gif)
 
 }

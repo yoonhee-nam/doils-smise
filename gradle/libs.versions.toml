@@ -1,5 +1,8 @@
 [versions]
+activityComposeVersion = "1.9.1"
 agp = "8.6.0"
+coilCompose = "2.1.0"
+constraintlayoutCompose = "1.0.1"
 converterGson = "2.9.0"
 kotlin = "1.9.0"
 coreKtx = "1.10.1"
@@ -9,10 +12,22 @@ espressoCore = "3.5.1"
 lifecycleRuntimeKtx = "2.6.1"
 activityCompose = "1.8.0"
 composeBom = "2024.04.01"
+lifecycleRuntimeKtxVersion = "2.8.4"
+lifecycleViewmodelCompose = "2.8.6"
 retrofit = "2.9.0"
+constraintlayout = "2.1.4"
+ui = "1.7.4"
+uiTooling = "1.7.4"
+uiToolingPreview = "1.7.4"
 
 [libraries]
+androidx-activity-compose-v191 = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
+androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "constraintlayoutCompose" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-lifecycle-runtime-ktx-v284 = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtxVersion" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
+coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coilCompose" }
 converter-gson = { module = "com.squareup.retrofit2:converter-gson", version.ref = "converterGson" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
@@ -28,6 +43,10 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
+ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
+ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "uiTooling" }
+ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "uiToolingPreview" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
