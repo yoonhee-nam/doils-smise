@@ -60,17 +60,21 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.play.services.maps)
+    implementation(libs.play.services.location)
+    implementation(libs.androidx.runtime.livedata)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
+
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
     implementation(libs.ui)
     //noinspection UseTomlInstead
-    implementation("androidx.compose.material:material:1.7.4")
+    implementation("androidx.compose.material3:material3")
 
     implementation(libs.ui.tooling.preview)
     debugImplementation(libs.ui.tooling)
@@ -91,5 +95,7 @@ dependencies {
     //coil
     implementation(libs.coil.compose)
     implementation(libs.coil.gif)
+
+    implementation (libs.gms.play.services.location.v2101)
 
 }

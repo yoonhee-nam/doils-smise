@@ -36,6 +36,8 @@ data class DustHeader(
 data class DustItem(
     @SerializedName("stationName") val stationName: String,
     @SerializedName("sidoName") val sidoName: String,
+    @SerializedName("sggName") val sggName: String,
+    @SerializedName("umdName") val umdName: String,
     @SerializedName("dataTime") val dataTime: String,
     @SerializedName("khaiValue") val khaiValue: String?, // 여기서 Int -> String으로 변경
     @SerializedName("khaiGrade") val khaiGrade: String?,

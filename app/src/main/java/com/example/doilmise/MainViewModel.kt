@@ -1,19 +1,32 @@
 package com.example.doilmise
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.app.Application
+import android.content.pm.PackageManager
+import android.location.Address
+import android.location.Geocoder
+import android.location.Location
 import android.util.Log
-import androidx.lifecycle.ViewModel
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.doilmise.data.DustItem
 import com.example.doilmise.data.DustResponse
 import com.example.doilmise.data.cityAreas
 import com.example.doilmise.retrofit.NetworkClient
+import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.Response
+import java.io.IOException
+import java.util.Locale
 
-class MainViewModel : ViewModel() {
+class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val api_key = "OTBHTek8vJloIgwterEp9gj9m07gzeqFuI7KVq6W7HufXKkqI0l7HzkRhMMLZwpDg5SxDKaI8jTKBy8TTd79ug=="
 
     // South Korea cities list
@@ -43,6 +56,17 @@ class MainViewModel : ViewModel() {
     // Save the classification result of air quality
     private val _airQualityClassification = MutableStateFlow("")
     val airQualityClassification: StateFlow<String> = _airQualityClassification.asStateFlow()
+
+    private val _locationDistance = MutableLiveData<String>()
+    val locationDistance: LiveData<String> get() = _locationDistance
+
+    private val _locationAddress = MutableLiveData<String>()
+    val locationAddress: LiveData<String> get() = _locationAddress
+
+    private val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(application)
+
+
+
 
     // Update the selected city when a city is selected
     fun setSelectedCity(city: String) {
@@ -117,6 +141,51 @@ class MainViewModel : ViewModel() {
         }
     }
 
+    fun requestLocation() {
+        if (ContextCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            getLocation()
+
+        } else {
+            Log.d("requestLocation", "requestLocation: ${error("?!")}")
+            // 권한 요청 로직 추가
+            // requestLocationPermission()을 호출하여 권한을 요청합니다.
+        }
+    }
+
+
+
+    @SuppressLint("MissingPermission")
+    private fun getLocation() {
+        fusedLocationProviderClient.lastLocation
+            .addOnSuccessListener { location ->
+                location?.let {
+                    getAddress(it.latitude, it.longitude)
+                } ?: run {
+                    _locationAddress.value = "위치를 가져올 수 없습니다."
+                }
+            }
+            .addOnFailureListener { e ->
+                _locationAddress.value = e.localizedMessage ?: "위치 오류"
+            }
+    }
+
+    private fun getAddress(lat: Double, lng: Double) {
+        try {
+            val geocoder = Geocoder(getApplication(), Locale.KOREA)
+            val addressList: List<Address>? = geocoder.getFromLocation(lat, lng, 1)
+            addressList?.firstOrNull()?.let { address ->
+                _locationAddress.value = "${address.adminArea} ${address.locality} ${address.thoroughfare}"
+                Log.d("getAddress", "getAddress: ${_locationAddress.value}")
+            } ?: run {
+                _locationAddress.value = "주소를 가져 올 수 없습니다."
+            }
+        } catch (e: IOException) {
+            _locationAddress.value = "주소를 가져 올 수 없습니다."
+        }
+    }
+}
+
+
     // Return the level after classifying the fine dust value
     fun classifyAirQuality(pm10Value: String?, pm25Value: String?, o3Value: String?): String {
         val pm10Int = pm10Value?.toIntOrNull()
@@ -173,4 +242,3 @@ class MainViewModel : ViewModel() {
             ver = "1.3"
         )
     }
-}

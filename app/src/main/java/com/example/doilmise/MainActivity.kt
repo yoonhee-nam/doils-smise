@@ -1,5 +1,6 @@
 package com.example.doilmise
 
+import android.app.Application
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -23,10 +25,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.DropdownMenu
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,20 +43,31 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.ViewModelProvider
+import coil.compose.rememberAsyncImagePainter
 
 import coil.compose.rememberImagePainter
+import com.example.doilmise.location.LocationApp
+import com.example.doilmise.location.RequestPermissionsUtil
 import com.example.doilmise.ui.theme.DoilmiseTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        RequestPermissionsUtil(this).requestLocation()
+
         setContent {
+            val viewModel: MainViewModel = ViewModelProvider(this)[MainViewModel::class.java]
+            viewModel.requestLocation()
+
             DoilmiseTheme {
+                LocationApp(viewModel)
                 Surface (
                     modifier = Modifier.fillMaxSize(),
                     color = Color(0xFF9ED2EC)) {
-                    MainContent()
+                    viewModel.requestLocation()
+                    MainContent(viewModel = viewModel)
                 }
             }
         }
@@ -62,11 +75,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainContent(viewModel: MainViewModel = MainViewModel()) {
+fun MainContent(viewModel: MainViewModel = MainViewModel(Application())) {
     val airQualityClassification by viewModel.airQualityClassification.collectAsState()
 
     // 이미지 리소스와 배경색을 설정하는 함수
-    val (imageResId, backgroundColor) = when (airQualityClassification) {
+    val (_, backgroundColor) = when (airQualityClassification) {
         "좋음" -> R.drawable.good to Color(0xFF31A4DD) // 좋음
         "보통" -> R.drawable.soso to Color(0xFF2A612C) // 보통
         "나쁨" -> R.drawable.bad to Color(0xFFFF9800) // 나쁨
@@ -152,28 +165,28 @@ fun Spinner(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.width(with(LocalDensity.current) { boxWidth.toDp() }) // 드롭다운 메뉴의 너비를 Box의 너비와 같게 설정
+            modifier = Modifier
+                .width(IntrinsicSize.Min) // 드롭다운 메뉴의 너비를 Box의 너비와 같게 설정
         ) {
             items.forEach { item ->
-                DropdownMenuItem(onClick = {
-                    selectedOptionText = item
-                    expanded = false
-                    onItemSelected(item)
-                }) {
-                    Text(
-                        text = item,
-                        fontSize = 16.sp,
-                    )
-                }
+                DropdownMenuItem(
+                    text = { Text(text = item, fontSize = 16.sp) },
+                    onClick = {
+                        selectedOptionText = item
+                        expanded = false
+                        onItemSelected(item)
+                    }
+                )
             }
         }
-    }
-}
+            }
+        }
+
 
 @Composable
 fun Imoji(@DrawableRes drawableResId: Int, modifier: Modifier = Modifier) {
     Image(
-        painter = rememberImagePainter(data = drawableResId),
+        painter = rememberAsyncImagePainter(model = drawableResId),
         contentDescription = null,
         modifier = modifier
     )
@@ -207,7 +220,8 @@ fun MainInfo(viewModel: MainViewModel) {
         val (location, date, data, level, image) = createRefs()
 
         // location 업데이트
-        val locationText = dustData?.let { "${it.sidoName} $selectedArea" } ?: "지역을 선택해주세요."
+        val locationText = viewModel.locationAddress.value.toString()
+        Log.d("MainActivity", "MainInfo: $locationText")
         // dataTime 업데이트
         val dateText = dustData?.dataTime ?: ""
         // khaiValue 업데이트
@@ -270,13 +284,5 @@ fun MainInfo(viewModel: MainViewModel) {
                 end.linkTo(parent.end)
             }
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MainContentPreview() {
-    DoilmiseTheme {
-        MainContent()
     }
 }
