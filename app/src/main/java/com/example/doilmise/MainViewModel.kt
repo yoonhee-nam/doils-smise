@@ -146,7 +146,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             getLocation()
 
         } else {
-            Log.d("requestLocation", "requestLocation: ${error("?!")}")
+            Log.d("requestLocation", "requestLocation: 권한")
             // 권한 요청 로직 추가
             // requestLocationPermission()을 호출하여 권한을 요청합니다.
         }
