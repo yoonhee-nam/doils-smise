@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -198,6 +199,7 @@ fun MainInfo(viewModel: MainViewModel) {
     val airQualityClassification by viewModel.airQualityClassification.collectAsState()
     val dustData by viewModel.dustData.collectAsState()
     val selectedArea by viewModel.selectedArea.collectAsState()
+    val locationText by viewModel.locationAddress.observeAsState("위치 정보를 로딩 중입니다...")
 
     // 이미지 리소스와 배경색을 설정하는 함수
     val imageResId = when (airQualityClassification) {
@@ -219,9 +221,6 @@ fun MainInfo(viewModel: MainViewModel) {
     ) {
         val (location, date, data, level, image) = createRefs()
 
-        // location 업데이트
-        val locationText = viewModel.locationAddress.value.toString()
-        Log.d("MainActivity", "MainInfo: $locationText")
         // dataTime 업데이트
         val dateText = dustData?.dataTime ?: ""
         // khaiValue 업데이트
