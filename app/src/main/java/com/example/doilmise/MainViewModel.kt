@@ -86,13 +86,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _areas.value = cityArea?.areas ?: emptyList()
     }
 
+
     // Load dust information for the area
     private fun loadDustInfo(area: String) = viewModelScope.launch {
-        // Set the loading state to true to notify the UI that it is loading
+
         _isLoading.value = true
+        Log.d("loaddustsifo", "loadDustInfo: $area")
         // execute if the currently selected city is not null
         selectedCity.value?.let { city ->
             try {
+                Log.d("loadDustSuc", "city: $city")
                 // call the API
                 val response = fetchDustInfo(api_key, city, area)
 
@@ -100,19 +103,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 if (response.isSuccessful) {
                     // Response body
                     response.body()?.let { dustResponse ->
+                        Log.d("loadDustSuc", "loadDustInfo: $dustResponse")
                         dustResponse.response.body.let { body ->
                             // Load the dust items from the response
                             val items = body.dustItem
 
                             // Filter items that match the selected area
-                            val matchingItems = items?.filter { it.stationName == area }
+//                            val matchingItems = items?.filter { item ->
+//                                Log.d("DustInfo", "Station: ${item.stationName}, Area: $area") // Log stationName and area
+//                                item.stationName == area
+//                            }
 
                             // execute if the dust item is not empty
                             if (!items.isNullOrEmpty()) {
                                 // Get the first matching dust item
-                                val dustItem = matchingItems?.first()
+                                Log.d("dustItem ", "loadDustInfo, matchingItems: $items")
+                                val dustItem = items.firstOrNull()
                                 // Set the acquired dust item to StateFlow
                                 _dustData.value = dustItem
+                                Log.d("dustItem", "loadDustInfo: $dustItem")
 
                                 // Logging after classifying the value
                                 val classification = classifyAirQuality(
@@ -123,6 +132,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 // Set the classification result to StateFlow
                                 _airQualityClassification.value = classification
                                 Log.i("AirQuality", classification)
+                                Log.i("AirQuality", "${dustItem?.o3Value}")
                             } else {
                                 // Failed to get dust information
                                 Log.e("MainViewModel", "Error: ${response.errorBody()?.string()}")
@@ -174,8 +184,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val geocoder = Geocoder(getApplication(), Locale.KOREA)
             val addressList: List<Address>? = geocoder.getFromLocation(lat, lng, 1)
             addressList?.firstOrNull()?.let { address ->
-                _locationAddress.value = "${address.adminArea} ${address.locality} ${address.thoroughfare}"
+                val adminArea = address.adminArea
+                val cityAbbreviation = when (adminArea) {
+                    "충청남도" -> "충남"
+                    "충청북도" -> "충북"
+                    "전라남도" -> "전남"
+                    "전라북도" -> "전북"
+                    "경상남도" -> "경남"
+                    "경상북도" -> "경북"
+                    "강원도" -> "강원"
+                    "경기도" -> "경기"
+                    else -> adminArea // 변환되지 않으면 원래 값 유지
+                }
+                _locationAddress.value = "${cityAbbreviation} ${address.locality} ${address.thoroughfare}"
+                _selectedCity.value = cityAbbreviation
                 Log.d("getAddress", "getAddress: ${_locationAddress.value}")
+                _locationAddress.value =_locationAddress.value.toString()
+                loadDustInfo(address.thoroughfare)
+
             } ?: run {
                 _locationAddress.value = "주소를 가져 올 수 없습니다."
             }
@@ -183,6 +209,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _locationAddress.value = "주소를 가져 올 수 없습니다."
         }
     }
+
+//    fun updateLocate (area : String) {
+//        _locationAddress.value = area
+//        loadDustInfo(area)
+//    }
+
 }
 
 
@@ -237,6 +269,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             numOfRows = "100",
             pageNo = "1",
             sidoName = city,
+            sggName = area,
             stationName = area,
             dataTerm = "daily",
             ver = "1.3"

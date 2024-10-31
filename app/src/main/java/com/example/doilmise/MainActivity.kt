@@ -64,9 +64,10 @@ class MainActivity : ComponentActivity() {
 
             DoilmiseTheme {
                 LocationApp(viewModel)
-                Surface (
+                Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = Color(0xFF9ED2EC)) {
+                    color = Color(0xFF9ED2EC)
+                ) {
                     viewModel.requestLocation()
                     MainContent(viewModel = viewModel)
                 }
@@ -198,7 +199,6 @@ fun Imoji(@DrawableRes drawableResId: Int, modifier: Modifier = Modifier) {
 fun MainInfo(viewModel: MainViewModel) {
     val airQualityClassification by viewModel.airQualityClassification.collectAsState()
     val dustData by viewModel.dustData.collectAsState()
-    val selectedArea by viewModel.selectedArea.collectAsState()
     val locationText by viewModel.locationAddress.observeAsState("위치 정보를 로딩 중입니다...")
 
     // 이미지 리소스와 배경색을 설정하는 함수
@@ -221,12 +221,10 @@ fun MainInfo(viewModel: MainViewModel) {
     ) {
         val (location, date, data, level, image) = createRefs()
 
-        // dataTime 업데이트
-        val dateText = dustData?.dataTime ?: ""
-        // khaiValue 업데이트
-        val dataText = dustData?.khaiValue ?: "0"
+        val dateTimeText = dustData?.dataTime ?: "데이터를 불러오는 중입니다..."
+        val dataText = dustData?.khaiValue ?: "데이터를 불러오는 중입니다..."
 
-        Log.d("MainInfo", "LocationText: $locationText, DateText: $dateText, DataText: $dataText")
+        Log.d("MainInfo", "LocationText: $locationText, DateText: $dateTimeText, DataText: $dataText")
         //TODO: LOG 2중으로 찍힘
 
         Text(
@@ -241,7 +239,7 @@ fun MainInfo(viewModel: MainViewModel) {
         )
 
         Text(
-            text = dateText,
+            text = dateTimeText,
             fontSize = 16.sp,
             color = Color.Black,
             modifier = Modifier.constrainAs(date) {

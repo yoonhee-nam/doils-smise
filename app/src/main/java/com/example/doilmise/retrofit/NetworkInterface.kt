@@ -14,6 +14,7 @@ interface NetworkInterface {
         @Query("numOfRows") numOfRows: String,
         @Query("pageNo") pageNo: String,
         @Query("sidoName") sidoName: String,
+        @Query("sggName") sggName: String,
         @Query("stationName") stationName: String,
         @Query("dataTerm") dataTerm: String,
         @Query("ver") ver: String
