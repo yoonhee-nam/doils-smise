@@ -6,19 +6,15 @@ import android.app.Application
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
-import android.location.Location
 import android.net.Uri
 import android.util.Log
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.doilmise.data.DustItem
 import com.example.doilmise.data.DustResponse
-import com.example.doilmise.data.cityAreas
 import com.example.doilmise.retrofit.NetworkClient
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
@@ -34,22 +30,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val api_key =
         "OTBHTek8vJloIgwterEp9gj9m07gzeqFuI7KVq6W7HufXKkqI0l7HzkRhMMLZwpDg5SxDKaI8jTKBy8TTd79ug=="
 
-    // Save the currently selected city
+
     private val _selectedCity = MutableStateFlow<String?>(null)
     val selectedCity: StateFlow<String?> = _selectedCity.asStateFlow()
 
-    // Save the currently selected area
     private val _selectedArea = MutableStateFlow<String?>(null)
     val selectedArea: StateFlow<String?> = _selectedArea.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
 
-    // Save the data received from the API
     private val _dustData = MutableStateFlow<DustItem?>(null)
     val dustData: StateFlow<DustItem?> = _dustData.asStateFlow()
 
-    // Save the classification result of air quality
     private val _airQualityClassification = MutableStateFlow("")
     val airQualityClassification: StateFlow<String> = _airQualityClassification.asStateFlow()
 
@@ -207,7 +200,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 }
 
 
-// Return the level after classifying the fine dust value
 fun classifyAirQuality(pm10Value: String?, pm25Value: String?, o3Value: String?): String {
     val pm10Int = pm10Value?.toIntOrNull()
     val pm25Int = pm25Value?.toIntOrNull()
@@ -246,7 +238,6 @@ fun classifyAirQuality(pm10Value: String?, pm25Value: String?, o3Value: String?)
     }
 }
 
-// Fetch the value from the API
 suspend fun fetchDustInfo(
     serviceKey: String,
     city: String,
