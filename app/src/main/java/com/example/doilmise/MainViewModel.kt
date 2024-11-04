@@ -28,7 +28,7 @@ import java.util.Locale
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val api_key =
-        "OTBHTek8vJloIgwterEp9gj9m07gzeqFuI7KVq6W7HufXKkqI0l7HzkRhMMLZwpDg5SxDKaI8jTKBy8TTd79ug=="
+        BuildConfig.api_key
 
 
     private val _selectedCity = MutableStateFlow<String?>(null)

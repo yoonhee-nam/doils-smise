@@ -1,8 +1,13 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-}
 
+}
+val properties = Properties().apply { load(FileInputStream(rootProject.file("local.properties"))) }
 android {
     namespace = "com.example.doilmise"
     compileSdk = 34
@@ -13,6 +18,9 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
+
+        buildConfigField("String", "api_key", properties.getProperty("api_key"))
+        manifestPlaceholders["api_key"] = properties.getProperty("api_key") // 추가된 부분
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -38,6 +46,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -48,6 +57,7 @@ android {
         }
     }
 }
+
 
 dependencies {
 
@@ -99,5 +109,7 @@ dependencies {
     implementation (libs.gms.play.services.location.v2101)
 
     implementation (libs.accompanist.swiperefresh.v0280)
+
+
 
 }
