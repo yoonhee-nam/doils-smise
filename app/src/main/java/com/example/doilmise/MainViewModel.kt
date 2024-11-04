@@ -7,9 +7,12 @@ import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
+import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -28,12 +31,6 @@ import java.util.Locale
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val api_key = "OTBHTek8vJloIgwterEp9gj9m07gzeqFuI7KVq6W7HufXKkqI0l7HzkRhMMLZwpDg5SxDKaI8jTKBy8TTd79ug=="
-
-    // South Korea cities list
-    val cities = listOf(
-        "서울", "부산", "대구", "인천", "광주", "대전", "울산",
-        "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주", "세종"
-    )
 
     // Manage the list of areas for the selected city
     private val _areas = MutableStateFlow<List<String>>(emptyList())
@@ -63,10 +60,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _locationAddress = MutableLiveData<String>()
     val locationAddress: LiveData<String> get() = _locationAddress
 
+    private val _imageUris = MutableStateFlow<Map<String, Uri?>>(emptyMap())
+    val imageUris: StateFlow<Map<String, Uri?>> = _imageUris
+
     private val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(application)
 
 
 
+
+    fun updateImageUri(classification: String, uri: Uri) {
+        val currentMap = _imageUris.value.toMutableMap() // 현재 상태를 가져옵니다.
+        currentMap[classification] = uri // 새로운 URI로 업데이트합니다.
+        _imageUris.value = currentMap // 변경된 맵을 다시 StateFlow에 설정합니다.
+        Log.d("updateImageUri", "updateImageUri: $currentMap ")
+    }
 
     // Update the selected city when a city is selected
     fun setSelectedCity(city: String) {
