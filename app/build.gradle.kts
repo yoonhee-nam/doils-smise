@@ -98,4 +98,6 @@ dependencies {
 
     implementation (libs.gms.play.services.location.v2101)
 
+    implementation (libs.accompanist.swiperefresh.v0280)
+
 }

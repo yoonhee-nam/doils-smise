@@ -1,4 +1,6 @@
 [versions]
+accompanistSwiperefresh = "<latest_version>"
+accompanistSwiperefreshVersion = "0.28.0"
 activityComposeVersion = "1.9.1"
 agp = "8.6.0"
 coilCompose = "2.1.0"
@@ -28,6 +30,8 @@ uiDesktop = "1.7.0"
 runtimeLivedata = "1.7.4"
 
 [libraries]
+accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistSwiperefresh" }
+accompanist-swiperefresh-v0280 = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistSwiperefreshVersion" }
 androidx-activity-compose-v191 = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
 androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "constraintlayoutCompose" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

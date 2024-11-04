@@ -21,6 +21,7 @@ import com.example.doilmise.data.DustResponse
 import com.example.doilmise.data.cityAreas
 import com.example.doilmise.retrofit.NetworkClient
 import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,11 +31,8 @@ import java.io.IOException
 import java.util.Locale
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    private val api_key = "OTBHTek8vJloIgwterEp9gj9m07gzeqFuI7KVq6W7HufXKkqI0l7HzkRhMMLZwpDg5SxDKaI8jTKBy8TTd79ug=="
-
-    // Manage the list of areas for the selected city
-    private val _areas = MutableStateFlow<List<String>>(emptyList())
-    val areas: StateFlow<List<String>> = _areas.asStateFlow()
+    private val api_key =
+        "OTBHTek8vJloIgwterEp9gj9m07gzeqFuI7KVq6W7HufXKkqI0l7HzkRhMMLZwpDg5SxDKaI8jTKBy8TTd79ug=="
 
     // Save the currently selected city
     private val _selectedCity = MutableStateFlow<String?>(null)
@@ -45,6 +43,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val selectedArea: StateFlow<String?> = _selectedArea.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
+    val isLoading = _isLoading.asStateFlow()
 
     // Save the data received from the API
     private val _dustData = MutableStateFlow<DustItem?>(null)
@@ -63,9 +62,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _imageUris = MutableStateFlow<Map<String, Uri?>>(emptyMap())
     val imageUris: StateFlow<Map<String, Uri?>> = _imageUris
 
-    private val fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(application)
+    private val fusedLocationProviderClient =
+        LocationServices.getFusedLocationProviderClient(application)
 
+    init {
+        loadSomething()
+    }
 
+    private fun loadSomething() = viewModelScope.launch {
+        _isLoading.value = true
+        delay(1000L)
+        _isLoading.value = false
+    }
 
 
     fun updateImageUri(classification: String, uri: Uri) {
@@ -75,27 +83,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         Log.d("updateImageUri", "updateImageUri: $currentMap ")
     }
 
-    // Update the selected city when a city is selected
-    fun setSelectedCity(city: String) {
-        _selectedCity.value = city
-        updateAreasForCity(city)
-    }
-
-    // Process area selection, update, and load dust information
-    fun setSelectedArea(area: String) {
-        _selectedArea.value = area
-        loadDustInfo(area)
-    }
-
-    // Update area information according to the selected city
-    private fun updateAreasForCity(city: String) {
-        val cityArea = cityAreas.find { it.city == city }
-        _areas.value = cityArea?.areas ?: emptyList()
-    }
-
-
     // Load dust information for the area
-    private fun loadDustInfo(area: String) = viewModelScope.launch {
+    fun loadDustInfo(area: String) = viewModelScope.launch {
 
         _isLoading.value = true
         Log.d("loaddustsifo", "loadDustInfo: $area")
@@ -114,12 +103,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         dustResponse.response.body.let { body ->
                             // Load the dust items from the response
                             val items = body.dustItem
-
-                            // Filter items that match the selected area
-//                            val matchingItems = items?.filter { item ->
-//                                Log.d("DustInfo", "Station: ${item.stationName}, Area: $area") // Log stationName and area
-//                                item.stationName == area
-//                            }
 
                             // execute if the dust item is not empty
                             if (!items.isNullOrEmpty()) {
@@ -147,7 +130,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         }
                     }
                 } else {
-                    Log.e("TAG", "loadDustInfo: ${error(message = "?")}", )
+                    Log.e("TAG", "loadDustInfo: ${error(message = "?")}")
                 }
             } catch (e: Exception) {
                 Log.e("MainViewModel", "Error fetching dust info for $area, $city", e)
@@ -159,7 +142,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun requestLocation() {
-        if (ContextCompat.checkSelfPermission(getApplication(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                getApplication(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
             getLocation()
 
         } else {
@@ -168,7 +155,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             // requestLocationPermission()을 호출하여 권한을 요청합니다.
         }
     }
-
 
 
     @SuppressLint("MissingPermission")
@@ -203,10 +189,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     "경기도" -> "경기"
                     else -> adminArea // 변환되지 않으면 원래 값 유지
                 }
-                _locationAddress.value = "${cityAbbreviation} ${address.locality} ${address.thoroughfare}"
+                _locationAddress.value =
+                    "${cityAbbreviation} ${address.locality} ${address.thoroughfare}"
                 _selectedCity.value = cityAbbreviation
                 Log.d("getAddress", "getAddress: ${_locationAddress.value}")
-                _locationAddress.value =_locationAddress.value.toString()
+                _locationAddress.value = _locationAddress.value.toString()
                 loadDustInfo(address.thoroughfare)
 
             } ?: run {
@@ -217,68 +204,63 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-//    fun updateLocate (area : String) {
-//        _locationAddress.value = area
-//        loadDustInfo(area)
-//    }
-
 }
 
 
-    // Return the level after classifying the fine dust value
-    fun classifyAirQuality(pm10Value: String?, pm25Value: String?, o3Value: String?): String {
-        val pm10Int = pm10Value?.toIntOrNull()
-        val pm25Int = pm25Value?.toIntOrNull()
-        val o3Double = o3Value?.toDoubleOrNull()
+// Return the level after classifying the fine dust value
+fun classifyAirQuality(pm10Value: String?, pm25Value: String?, o3Value: String?): String {
+    val pm10Int = pm10Value?.toIntOrNull()
+    val pm25Int = pm25Value?.toIntOrNull()
+    val o3Double = o3Value?.toDoubleOrNull()
 
-        val pm10Grade = when {
-            pm10Int == null -> 0
-            pm10Int <= 30 -> 1
-            pm10Int <= 80 -> 2
-            pm10Int <= 150 -> 3
-            else -> 4
-        }
-
-        val pm25Grade = when {
-            pm25Int == null -> 0
-            pm25Int <= 15 -> 1
-            pm25Int <= 35 -> 2
-            pm25Int <= 75 -> 3
-            else -> 4
-        }
-
-        val o3Grade = when {
-            o3Double == null -> 0
-            o3Double <= 0.030 -> 1
-            o3Double <= 0.090 -> 2
-            o3Double <= 0.150 -> 3
-            else -> 4
-        }
-        val averageGrade = (pm10Grade + pm25Grade + o3Grade) / 3.0
-
-        return when {
-            averageGrade <= 1 -> "좋음"
-            averageGrade <= 2 -> "보통"
-            averageGrade <= 3 -> "나쁨"
-            else -> "매우 나쁨"
-        }
+    val pm10Grade = when {
+        pm10Int == null -> 0
+        pm10Int <= 30 -> 1
+        pm10Int <= 80 -> 2
+        pm10Int <= 150 -> 3
+        else -> 4
     }
 
-    // Fetch the value from the API
-    suspend fun fetchDustInfo(
-        serviceKey: String,
-        city: String,
-        area: String
-    ): Response<DustResponse> {
-        return NetworkClient.dustNetWork.getDust(
-            serviceKey = serviceKey,
-            returnType = "json",
-            numOfRows = "100",
-            pageNo = "1",
-            sidoName = city,
-            sggName = area,
-            stationName = area,
-            dataTerm = "daily",
-            ver = "1.3"
-        )
+    val pm25Grade = when {
+        pm25Int == null -> 0
+        pm25Int <= 15 -> 1
+        pm25Int <= 35 -> 2
+        pm25Int <= 75 -> 3
+        else -> 4
     }
+
+    val o3Grade = when {
+        o3Double == null -> 0
+        o3Double <= 0.030 -> 1
+        o3Double <= 0.090 -> 2
+        o3Double <= 0.150 -> 3
+        else -> 4
+    }
+    val averageGrade = (pm10Grade + pm25Grade + o3Grade) / 3.0
+
+    return when {
+        averageGrade <= 1 -> "좋음"
+        averageGrade <= 2 -> "보통"
+        averageGrade <= 3 -> "나쁨"
+        else -> "매우 나쁨"
+    }
+}
+
+// Fetch the value from the API
+suspend fun fetchDustInfo(
+    serviceKey: String,
+    city: String,
+    area: String
+): Response<DustResponse> {
+    return NetworkClient.dustNetWork.getDust(
+        serviceKey = serviceKey,
+        returnType = "json",
+        numOfRows = "100",
+        pageNo = "1",
+        sidoName = city,
+        sggName = area,
+        stationName = area,
+        dataTerm = "daily",
+        ver = "1.3"
+    )
+}

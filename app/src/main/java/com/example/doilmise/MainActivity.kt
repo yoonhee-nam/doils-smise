@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package com.example.doilmise
 
 import android.app.Application
@@ -30,6 +32,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -47,6 +51,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester.Companion.createRefs
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -62,10 +67,13 @@ import coil.compose.rememberImagePainter
 import com.example.doilmise.location.LocationApp
 import com.example.doilmise.location.RequestPermissionsUtil
 import com.example.doilmise.ui.theme.DoilmiseTheme
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.SwipeRefreshIndicator
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 class MainActivity : ComponentActivity() {
-//    private val viewModel: MainViewModel = ViewModelProvider(this)[MainViewModel::class.java]
-private val viewModel: MainViewModel by viewModels()
+
+    private val viewModel: MainViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,215 +81,19 @@ private val viewModel: MainViewModel by viewModels()
         RequestPermissionsUtil(this).requestLocation()
 
         setContent {
-
             viewModel.requestLocation()
-
             DoilmiseTheme {
                 LocationApp(viewModel)
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = Color(0xFF9ED2EC)
                 ) {
-                    viewModel.requestLocation()
-                    MainContent(viewModel = viewModel)
+                    MainInfo(viewModel = viewModel)
                 }
             }
         }
     }
-    private val imagePickerLauncher = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri: Uri? ->
-        uri?.let {
-            viewModel.updateImageUri(currentClassification, it)
-            Log.d("imagePickerLauncher", "Selected Uri : $uri")
-        }
-    }
-
-    private var currentClassification: String = "좋음" // 기본값, Photo Picker 호출 시에 변경
-
-    fun pickImageForClassification(classification: String) {
-        val request = PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-        imagePickerLauncher.launch(request)
-    }
 }
-
-
-@Composable
-fun MainContent(viewModel: MainViewModel = MainViewModel(Application())) {
-    val airQualityClassification by viewModel.airQualityClassification.collectAsState()
-    val imageUris by viewModel.imageUris.collectAsState()
-
-    val context = LocalContext.current as MainActivity
-    val imageUri = imageUris[airQualityClassification]
-
-    // 이미지 리소스와 배경색을 설정하는 함수
-//    val (_, backgroundColor) = when (airQualityClassification) {
-//        "좋음" -> R.drawable.good to Color(0xFF31A4DD) // 좋음
-//        "보통" -> R.drawable.soso to Color(0xFF2A612C) // 보통
-//        "나쁨" -> R.drawable.bad to Color(0xFFFF9800) // 나쁨
-//        "매우 나쁨" -> R.drawable.terrible to Color(0xFFF44336) // 매우 나쁨
-//        else -> R.drawable.base to Color(0xFF5B60A0) // 기본값
-//    }
-    // 각각의 상태에 맞는 이미지 URI를 버튼으로 선택할 수 있도록 설정
-    val launcherForGood = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { viewModel.updateImageUri("좋음", it) }
-    }
-    val launcherForNormal = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { viewModel.updateImageUri("보통", it) }
-    }
-    val launcherForBad = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { viewModel.updateImageUri("나쁨", it) }
-    }
-    val launcherForVeryBad = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { viewModel.updateImageUri("매우 나쁨", it) }
-    }
-
-
-
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-//        color = backgroundColor // 화면 배경색
-    ) {
-        // 도시와 구역 스피너를 수평으로 배열
-        Column( // vertical layout
-            modifier = Modifier
-                .fillMaxSize() // column 이 전체 화면을 차지하도록
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-            Text(text = "이미지 설정하기", fontSize = 20.sp, color = Color.Black)
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // 각 상태의 이미지를 선택할 수 있는 버튼 추가
-            Button(
-                onClick = { launcherForGood.launch("image/*") },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-            ) {
-                Text(text = "좋음 이미지 선택")
-            }
-
-            Button(
-                onClick = { launcherForNormal.launch("image/*") },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-            ) {
-                Text(text = "보통 이미지 선택")
-            }
-
-            Button(
-                onClick = { launcherForBad.launch("image/*") },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-            ) {
-                Text(text = "나쁨 이미지 선택")
-            }
-
-            Button(
-                onClick = { launcherForVeryBad.launch("image/*") },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-            ) {
-                Text(text = "매우 나쁨 이미지 선택")
-            }
-        }
-//            CityAreaSpinners(viewModel)
-//            Spacer(modifier = Modifier.weight(1f)) // 빈 공간 추가하여 레이아웃 조정
-            Box(// 컴포넌트 겹쳐서 배치하는 레이아웃
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                MainInfo(viewModel)
-
-            }
-//            Spacer(Modifier.weight(1f)) // Imoge 아래쪽에 추가 공간을 제공
-
-        }
-
-    }
-
-//
-//@Composable
-//fun CityAreaSpinners(viewModel: MainViewModel) {
-//    Row(
-//        modifier = Modifier
-//            .fillMaxWidth()) { // 수평으로 배열
-//        Spinner(
-//            items = viewModel.cities, // 스피너에 표시될 항목 리스트
-//            label = "도시 선택", // 스피너 기본 텍스트
-//            onItemSelected = viewModel::setSelectedCity, // 항목 선택 시 호출할 함수
-//            modifier = Modifier.weight(1f) // Row 내에서 공간을 공평하게 나누기
-//        )
-//
-//        Spinner(
-//            items = viewModel.areas.collectAsState().value,
-//            label = "지역 선택",
-//            onItemSelected = viewModel::setSelectedArea,
-//            modifier = Modifier.weight(1f) // Row 내에서 공간을 공평하게 나누기
-//        )
-//    }
-//}
-//
-//@Composable
-//fun Spinner(
-//    items: List<String>,
-//    label: String,
-//    onItemSelected: (String) -> Unit,
-//    modifier: Modifier = Modifier
-//) {
-//    var expanded by remember { mutableStateOf(false) } // 드롭다운 메뉴 확장?
-//    var selectedOptionText by remember { mutableStateOf(label) } // 선택 항목 저장
-//
-//    BoxWithConstraints( // 드롭다운 메뉴의 컨테이너
-//        modifier = modifier
-//            .fillMaxWidth()  // 필수: weight가 올바르게 동작하려면 필요
-//            .padding(10.dp)
-//            .clickable(onClick = { expanded = true })
-//            .background(Color.Transparent)
-//            .border(1.dp, Color.White, RoundedCornerShape(8.dp)),
-//        contentAlignment = Alignment.Center
-//    ) {
-//        val boxWidth = constraints.maxWidth
-//
-//        Text(
-//            text = selectedOptionText,
-//            fontSize = 16.sp,
-//            color = Color.White,
-//            modifier = Modifier
-//                .padding(10.dp) // 선택 항목 표시
-//        )
-//
-//        DropdownMenu(
-//            expanded = expanded,
-//            onDismissRequest = { expanded = false },
-//            modifier = Modifier
-//                .width(IntrinsicSize.Min) // 드롭다운 메뉴의 너비를 Box의 너비와 같게 설정
-//        ) {
-//            items.forEach { item ->
-//                DropdownMenuItem(
-//                    text = { Text(text = item, fontSize = 16.sp) },
-//                    onClick = {
-//                        selectedOptionText = item
-//                        expanded = false
-//                        onItemSelected(item)
-//                    }
-//                )
-//            }
-//        }
-//            }
-//        }
-//
-
-@Composable
-fun Imoji(
-    @DrawableRes drawableResId: Int,
-    modifier: Modifier = Modifier,
-    onImageClick: () -> Unit) {
-    Image(
-        painter = rememberAsyncImagePainter(model = drawableResId),
-        contentDescription = null,
-        modifier = modifier
-            .clickable { onImageClick() }
-    )
-
-}
-
 
 @Composable
 fun MainInfo(viewModel: MainViewModel) {
@@ -290,26 +102,23 @@ fun MainInfo(viewModel: MainViewModel) {
     val locationText by viewModel.locationAddress.observeAsState("위치 정보를 로딩 중입니다...")
     val imageUris by viewModel.imageUris.collectAsState()
 
-    val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        uri?.let {
-            viewModel.updateImageUri(airQualityClassification, it)
+    // 이미지 선택기를 설정
+    val launcherForGood =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            uri?.let { viewModel.updateImageUri("좋음", it) }
         }
-    }
-
-    val launcherForGood = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { viewModel.updateImageUri("좋음", it) }
-    }
-    val launcherForNormal = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { viewModel.updateImageUri("보통", it) }
-    }
-    val launcherForBad = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { viewModel.updateImageUri("나쁨", it) }
-    }
-    val launcherForVeryBad = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { viewModel.updateImageUri("매우 나쁨", it) }
-    }
+    val launcherForNormal =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            uri?.let { viewModel.updateImageUri("보통", it) }
+        }
+    val launcherForBad =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            uri?.let { viewModel.updateImageUri("나쁨", it) }
+        }
+    val launcherForVeryBad =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+            uri?.let { viewModel.updateImageUri("매우 나쁨", it) }
+        }
 
     var showDialog by remember { mutableStateOf(false) }
 
@@ -322,6 +131,16 @@ fun MainInfo(viewModel: MainViewModel) {
         "매우 나쁨" -> R.drawable.terrible
         else -> R.drawable.base
     }
+    val subscriptions = when (airQualityClassification) {
+        "좋음" -> "산책가도 좋을 날씨네요!"
+        "보통" -> "민감하신 분들은 주의하세요."
+        "나쁨" -> "마스크 챙기셨죠?"
+        "매우 나쁨" -> "외출은 최대한 피해주세요 ㅠㅠ"
+        else -> ""
+    }
+
+
+    // 이미지 선택 다이얼로그
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
@@ -354,94 +173,81 @@ fun MainInfo(viewModel: MainViewModel) {
             }
         )
     }
+    val swipeRefreshState =
+        rememberSwipeRefreshState(isRefreshing = viewModel.isLoading.collectAsState().value)
 
-
-    ConstraintLayout(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-            .background(
-                color = Color.White,
-                shape = RoundedCornerShape(12.dp)
-            )
-    ) {
-        val (location, date, data, level, image) = createRefs()
-
-        val dateTimeText = dustData?.dataTime ?: "데이터를 불러오는 중입니다..."
-        val dataText = dustData?.khaiValue ?: "데이터를 불러오는 중입니다..."
-
-        Log.d("MainInfo", "LocationText: $locationText, DateText: $dateTimeText, DataText: $dataText")
-        //TODO: LOG 2중으로 찍힘
-
-        Text(
-            text = locationText,
-            fontSize = 24.sp,
-            color = Color.Black,
-            modifier = Modifier.constrainAs(location) {
-                top.linkTo(parent.top, margin = 60.dp)
-                start.linkTo(parent.start)
-                end.linkTo(parent.end)
-            }
-        )
-
-        Text(
-            text = dateTimeText,
-            fontSize = 16.sp,
-            color = Color.Black,
-            modifier = Modifier.constrainAs(date) {
-                top.linkTo(location.bottom, margin = 30.dp)
-                start.linkTo(parent.start)
-                end.linkTo(parent.end)
-            }
-        )
-
-        if (imageUri != null) {
-            Image(
-                painter = rememberImagePainter(data = imageUri),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(200.dp)
-                    .constrainAs(image) {
-                        centerHorizontallyTo(parent)
-                        centerVerticallyTo(parent)
-                    }
-                    .clickable { showDialog = true }
-            )
-        } else {
-            Image(
-                painter = painterResource(id = defaultImageResId),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(200.dp)
-                    .constrainAs(image) {
-                        centerHorizontallyTo(parent)
-                        centerVerticallyTo(parent)
-                    }
-                    .clickable { showDialog = true }
-            )
+    SwipeRefresh(
+        state = swipeRefreshState,
+        onRefresh = {
+            viewModel.loadDustInfo(viewModel.selectedArea.value ?: "") // 스와이프 시 데이터 로드
         }
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+        ) {
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.White, shape = RoundedCornerShape(12.dp)),
+                    horizontalAlignment = Alignment.CenterHorizontally
 
-        Text(
-            text = "$dataText ㎍/㎥",
-            fontSize = 16.sp,
-            color = Color.Black,
-            modifier = Modifier.constrainAs(data) {
-                bottom.linkTo(parent.bottom, margin = 160.dp)
-                start.linkTo(parent.start)
-                end.linkTo(parent.end)
-            }
-        )
+                )
+                {
 
-        // 수치 레벨 결과 표시
-        Text(
-            text = airQualityClassification,
-            fontSize = 28.sp,
-            color = Color.Black,
-            modifier = Modifier.constrainAs(level) {
-                top.linkTo(data.bottom, margin = 30.dp)
-                start.linkTo(parent.start)
-                end.linkTo(parent.end)
+                    val dateTimeText = dustData?.dataTime ?: "데이터를 불러오는 중입니다..."
+                    val dataText = dustData?.khaiValue ?: "데이터를 불러오는 중입니다..."
+
+                    Text(
+                        text = locationText,
+                        fontSize = 24.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(top = 80.dp,bottom = 8.dp)
+                    )
+
+                    Text(
+                        text = dateTimeText,
+                        fontSize = 16.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 8.dp) // 아래쪽 패딩 추가
+                    )
+
+                    Image(
+                        painter = rememberImagePainter(data = imageUri ?: defaultImageResId),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(200.dp)
+                            .clickable { showDialog = true } // 클릭 시 다이얼로그 표시
+                            .padding(bottom = 10.dp) // 아래쪽 패딩 추가
+                    )
+
+                    Text(
+                        text = airQualityClassification,
+                        fontSize = 50.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 30.dp) // 위쪽 패딩 추가
+                    )
+
+                    Text(
+                        text = subscriptions,
+                        fontSize = 23.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(bottom = 10.dp) // 위쪽 패딩 추가
+                    )
+
+                    Text(
+                        text = "$dataText ㎍/㎥",
+                        fontSize = 16.sp,
+                        color = Color.Black,
+                        modifier = Modifier.padding(top = 8.dp) // 아래쪽 패딩 추가
+                    )
+
+
+                }
             }
-        )
+        }
     }
 }
+
