@@ -174,19 +174,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun requestMedia() {
-        if (ContextCompat.checkSelfPermission(
-                getApplication(),
-                Manifest.permission.READ_MEDIA_IMAGES
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-
-            loadSavedImageUris()
-        } else {
-
-        }
-    }
-
 
     @SuppressLint("MissingPermission")
     private fun getLocation() {

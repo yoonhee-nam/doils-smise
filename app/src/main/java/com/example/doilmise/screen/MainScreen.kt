@@ -94,10 +94,10 @@ fun MainScreen(viewModel: MainViewModel) {
 
 
     val airQualityInfo = when (airQualityClassification) {
-        "좋음" -> Pair(R.drawable.good, Pair(Color(0xFFB2E7B2), "산책가도 좋을 날씨네요!")) // 연한 초록색
-        "보통" -> Pair(R.drawable.soso, Pair(Color(0xFFFFE5B2), "민감하신 분들은 주의하세요.")) // 연한 노란색
-        "나쁨" -> Pair(R.drawable.bad, Pair(Color(0xFFFFB2B2), "마스크 챙기셨죠?")) // 연한 빨간색
-        "매우 나쁨" -> Pair(R.drawable.terrible, Pair(Color(0xFFB2B2B2), "외출은 최대한 피해주세요 ㅠㅠ")) // 회색
+        "좋음" -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "산책가도 좋을 날씨네요!"))
+        "보통" -> Pair(R.drawable.soso, Pair(Color(0xFFB7E0FF), "민감하신 분들은 주의하세요."))
+        "나쁨" -> Pair(R.drawable.bad, Pair(Color(0xFFFFB2B2), "마스크 챙기셨죠?"))
+        "매우 나쁨" -> Pair(R.drawable.terrible, Pair(Color(0xFF4F1787), "외출은 최대한 피해주세요 ㅠㅠ"))
         else -> Pair(R.drawable.base, Pair(Color.White, "")) // 기본 색상
     }
 
@@ -170,14 +170,14 @@ fun MainScreen(viewModel: MainViewModel) {
                     Text(
                         text = locationText,
                         fontSize = 24.sp,
-                        color = Color.Black,
+                        color = Color.White,
                         modifier = Modifier.padding(top = 80.dp,bottom = 8.dp)
                     )
 
                     Text(
                         text = dateTimeText,
                         fontSize = 16.sp,
-                        color = Color.Black,
+                        color = Color.White,
                         modifier = Modifier.padding(bottom = 8.dp) // 아래쪽 패딩 추가
                     )
 
@@ -196,21 +196,21 @@ fun MainScreen(viewModel: MainViewModel) {
                     Text(
                         text = airQualityClassification,
                         fontSize = 50.sp,
-                        color = Color.Black,
+                        color = Color.White,
                         modifier = Modifier.padding(top = 20.dp,bottom = 8.dp) // 위쪽 패딩 추가
                     )
 
                     Text(
                         text = subscriptions,
                         fontSize = 23.sp,
-                        color = Color.Black,
+                        color = Color.White,
                         modifier = Modifier.padding(bottom = 10.dp) // 위쪽 패딩 추가
                     )
 
                     Text(
                         text = "$dataText ㎍/㎥",
                         fontSize = 16.sp,
-                        color = Color.Black,
+                        color = Color.White,
                         modifier = Modifier.padding(top = 8.dp) // 아래쪽 패딩 추가
                     )
                 }
