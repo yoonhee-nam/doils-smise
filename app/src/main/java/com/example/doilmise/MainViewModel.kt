@@ -3,6 +3,7 @@ package com.example.doilmise
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Application
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
@@ -13,8 +14,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.example.doilmise.data.AppDatabase
 import com.example.doilmise.data.DustItem
 import com.example.doilmise.data.DustResponse
+import com.example.doilmise.data.ImageEntity
 import com.example.doilmise.retrofit.NetworkClient
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
@@ -30,6 +33,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val api_key =
         BuildConfig.api_key
 
+    private val imageDao = AppDatabase.getInstance(application).imageDao()
 
     private val _selectedCity = MutableStateFlow<String?>(null)
     val selectedCity: StateFlow<String?> = _selectedCity.asStateFlow()
@@ -59,6 +63,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         LocationServices.getFusedLocationProviderClient(application)
 
     init {
+        loadSavedImageUris()
         loadSomething()
     }
 
@@ -69,11 +74,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
 
-    fun updateImageUri(classification: String, uri: Uri) {
-        val currentMap = _imageUris.value.toMutableMap() // 현재 상태를 가져옵니다.
-        currentMap[classification] = uri // 새로운 URI로 업데이트합니다.
-        _imageUris.value = currentMap // 변경된 맵을 다시 StateFlow에 설정합니다.
-        Log.d("updateImageUri", "updateImageUri: $currentMap ")
+    fun updateImageUri(classification: String, uri: Uri) = viewModelScope.launch {
+        val currentMap = _imageUris.value.toMutableMap()
+        currentMap[classification] = uri
+        _imageUris.value = currentMap
+
+        // 영구 URI 권한 요청, 예외 처리 추가
+        try {
+            getApplication<Application>().contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+            )
+        } catch (e: SecurityException) {
+            Log.e("MainViewModel", "Error taking persistable URI permission for $uri", e)
+        }
+
+        imageDao.insertImage(ImageEntity(classification, uri.toString()))
+    }
+
+
+    private fun loadSavedImageUris() = viewModelScope.launch {
+        val imageList = imageDao.getAllImageUris()
+        val imageMap = imageList.associate { it.classification to Uri.parse(it.uri) }
+        _imageUris.value = imageMap
+        Log.d("MainViewModel", "Loaded image URIs from Room: $imageMap")
     }
 
     // Load dust information for the area
@@ -142,10 +166,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         ) {
             getLocation()
 
+
         } else {
             Log.d("requestLocation", "requestLocation: 권한")
             // 권한 요청 로직 추가
             // requestLocationPermission()을 호출하여 권한을 요청합니다.
+        }
+    }
+
+    fun requestMedia() {
+        if (ContextCompat.checkSelfPermission(
+                getApplication(),
+                Manifest.permission.READ_MEDIA_IMAGES
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+
+            loadSavedImageUris()
+        } else {
+
         }
     }
 

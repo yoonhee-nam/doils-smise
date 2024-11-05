@@ -1,13 +1,20 @@
-import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 import java.io.FileInputStream
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    id("androidx.room")
+    id("com.google.devtools.ksp") version "2.0.21-1.0.26"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
+    id ("com.google.dagger.hilt.android")
 
 }
+
+
 val properties = Properties().apply { load(FileInputStream(rootProject.file("local.properties"))) }
+
 android {
     namespace = "com.example.doilmise"
     compileSdk = 34
@@ -20,7 +27,7 @@ android {
         versionName = "1.0"
 
         buildConfigField("String", "api_key", properties.getProperty("api_key"))
-        manifestPlaceholders["api_key"] = properties.getProperty("api_key") // 추가된 부분
+        manifestPlaceholders["api_key"] = properties.getProperty("api_key")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -55,6 +62,9 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+    room {
+        schemaDirectory("$projectDir/schemas")
     }
 }
 
@@ -110,6 +120,42 @@ dependencies {
 
     implementation (libs.accompanist.swiperefresh.v0280)
 
+    implementation(libs.androidx.room.runtime)
+    annotationProcessor(libs.androidx.room.room.compiler)
 
+    // To use Kotlin Symbol Processing (KSP)
+    ksp(libs.androidx.room.compiler.v250)
 
+    // optional - Kotlin Extensions and Coroutines support for Room
+    implementation(libs.androidx.room.ktx)
+
+    // optional - RxJava2 support for Room
+    implementation(libs.androidx.room.rxjava2)
+
+    // optional - RxJava3 support for Room
+    implementation(libs.androidx.room.rxjava3)
+
+    // optional - Guava support for Room, including Optional and ListenableFuture
+    implementation(libs.androidx.room.guava)
+
+    // optional - Test helpers
+    testImplementation(libs.androidx.room.testing)
+
+    // optional - Paging 3 Integration
+    implementation(libs.androidx.room.paging)
+
+    implementation(libs.symbol.processing.api)
+
+    implementation(kotlin("stdlib-jdk8"))
+// Hilt
+    implementation (libs.hilt.android.v252)
+    ksp (libs.hilt.compiler)
+
+    // For instrumentation tests
+    androidTestImplementation  (libs.hilt.android.testing)
+    ksp (libs.hilt.compiler)
+
+    // For local unit tests
+    testImplementation (libs.hilt.android.testing)
+    ksp (libs.hilt.compiler)
 }

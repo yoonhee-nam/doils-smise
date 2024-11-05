@@ -1,8 +1,9 @@
 package com.example.doilmise.screen
 
+import android.content.Intent
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -26,13 +27,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.rememberImagePainter
+import coil.compose.AsyncImage
 import com.example.doilmise.MainViewModel
 import com.example.doilmise.R
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+
+
 
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
@@ -41,28 +45,54 @@ fun MainScreen(viewModel: MainViewModel) {
     val locationText by viewModel.locationAddress.observeAsState("위치 정보를 로딩 중입니다...")
     val imageUris by viewModel.imageUris.collectAsState()
 
+    val context = LocalContext.current
 
     val launcherForGood =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            uri?.let { viewModel.updateImageUri("좋음", it) }
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        uri?.let {
+            try {
+                // 권한 부여
+                context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                viewModel.updateImageUri("좋음", it)
+            } catch (e: SecurityException) {
+                Log.e("MainScreen", "Failed to take persistable URI permission", e)
+            }
         }
+    }
     val launcherForNormal =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            uri?.let { viewModel.updateImageUri("보통", it) }
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let {
+                try {
+                    // 영구 권한 요청
+                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                    viewModel.updateImageUri("보통", it)
+                } catch (e: SecurityException) {
+                    Log.e("MainScreen", "Failed to take persistable URI permission", e)
+                }
+            }
         }
     val launcherForBad =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            uri?.let { viewModel.updateImageUri("나쁨", it) }
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let {
+                context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                viewModel.updateImageUri("나쁨", it)
+            }
         }
     val launcherForVeryBad =
-        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-            uri?.let { viewModel.updateImageUri("매우 나쁨", it) }
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let {
+                context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                viewModel.updateImageUri("매우 나쁨", it)
+            }
         }
 
     var showDialog by remember { mutableStateOf(false) }
 
     // 이미지 리소스와 배경색을 설정하는 함수
-    val imageUri = imageUris[airQualityClassification]
+    val imageUri = imageUris[airQualityClassification]?: R.drawable.base
+    Log.d("MainScreen", "Current imageUri: $imageUri")
+
+
     val airQualityInfo = when (airQualityClassification) {
         "좋음" -> Pair(R.drawable.good, Pair(Color(0xFFB2E7B2), "산책가도 좋을 날씨네요!")) // 연한 초록색
         "보통" -> Pair(R.drawable.soso, Pair(Color(0xFFFFE5B2), "민감하신 분들은 주의하세요.")) // 연한 노란색
@@ -86,19 +116,19 @@ fun MainScreen(viewModel: MainViewModel) {
             confirmButton = {
                 Column {
                     TextButton(onClick = {
-                        launcherForGood.launch("image/*")
+                        launcherForGood.launch(arrayOf("image/*"))
                         showDialog = false
                     }) { Text("좋음") }
                     TextButton(onClick = {
-                        launcherForNormal.launch("image/*")
+                        launcherForNormal.launch(arrayOf("image/*"))
                         showDialog = false
                     }) { Text("보통") }
                     TextButton(onClick = {
-                        launcherForBad.launch("image/*")
+                        launcherForBad.launch(arrayOf("image/*"))
                         showDialog = false
                     }) { Text("나쁨") }
                     TextButton(onClick = {
-                        launcherForVeryBad.launch("image/*")
+                        launcherForVeryBad.launch(arrayOf("image/*"))
                         showDialog = false
                     }) { Text("매우 나쁨") }
                 }
@@ -151,13 +181,16 @@ fun MainScreen(viewModel: MainViewModel) {
                         modifier = Modifier.padding(bottom = 8.dp) // 아래쪽 패딩 추가
                     )
 
-                    Image(
-                        painter = rememberImagePainter(data = imageUri ?: defaultImageResId),
+                    AsyncImage(
+                        model = imageUri,
                         contentDescription = null,
                         modifier = Modifier
                             .size(300.dp)
                             .clip(CircleShape)
-                            .clickable { showDialog = true } // 클릭 시 다이얼로그 표시
+                            .clickable { showDialog = true },
+                        onError = { error ->
+                            Log.e("ImageLoadError", "Error loading image: $error")
+                        }
                     )
 
                     Text(
