@@ -1,4 +1,4 @@
-package com.example.doilmise.data
+package com.example.doilmise.retrofit.airo
 
 import com.google.gson.annotations.SerializedName
 

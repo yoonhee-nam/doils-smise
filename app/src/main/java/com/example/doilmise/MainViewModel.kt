@@ -15,10 +15,11 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.doilmise.data.AppDatabase
-import com.example.doilmise.data.DustItem
-import com.example.doilmise.data.DustResponse
+import com.example.doilmise.retrofit.airo.DustItem
+import com.example.doilmise.retrofit.airo.DustResponse
 import com.example.doilmise.data.ImageEntity
-import com.example.doilmise.retrofit.NetworkClient
+import com.example.doilmise.retrofit.Repository
+import com.example.doilmise.retrofit.airo.AirKoreaApiService
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,16 +31,8 @@ import java.io.IOException
 import java.util.Locale
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
-    private val api_key =
-        BuildConfig.api_key
-
+    private val api_key = BuildConfig.api_key
     private val imageDao = AppDatabase.getInstance(application).imageDao()
-
-    private val _selectedCity = MutableStateFlow<String?>(null)
-    val selectedCity: StateFlow<String?> = _selectedCity.asStateFlow()
-
-    private val _selectedArea = MutableStateFlow<String?>(null)
-    val selectedArea: StateFlow<String?> = _selectedArea.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -62,6 +55,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val fusedLocationProviderClient =
         LocationServices.getFusedLocationProviderClient(application)
 
+    private val _locationPermissionGranted = MutableStateFlow(false)
+    val locationPermissionGranted: StateFlow<Boolean> = _locationPermissionGranted
+
+
     init {
         loadSavedImageUris()
         loadSomething()
@@ -72,6 +69,70 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         delay(1000L)
         _isLoading.value = false
     }
+    fun requestLocation() {
+        if (ContextCompat.checkSelfPermission(
+                getApplication(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            _locationPermissionGranted.value = true // 권한이 있을 경우 상태 업데이트
+            getLocation()
+
+        } else {
+            _locationPermissionGranted.value = false // 권한이 없을 경우 상태 업데이트
+            // 권한이 없으면 권한 요청
+            requestPermission()
+        }
+    }
+
+    // 권한 요청
+    private fun requestPermission() {
+        // 권한 요청 로직을 Compose에서 처리하도록 위임
+    }
+
+    // 위치 가져오기
+    @SuppressLint("MissingPermission")
+    private fun getLocation() {
+        fusedLocationProviderClient.lastLocation
+            .addOnSuccessListener { location ->
+                location?.let {
+
+                    getAddress(it.latitude, it.longitude)
+                    fetchAirQualityData()
+
+                } ?: run {
+                    _locationAddress.value = "위치를 가져올 수 없습니다."
+                }
+            }
+            .addOnFailureListener { e ->
+                _locationAddress.value = e.localizedMessage ?: "위치 오류"
+            }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun fetchAirQualityData() {
+        fusedLocationProviderClient.lastLocation
+            .addOnSuccessListener { location ->
+                location?.let { loc ->
+                    viewModelScope.launch {
+                        val monitoringStation = Repository.getNearbyMonitoringStation(loc.latitude, loc.longitude)
+                        val measuredValue = Repository.getLatestAirQualityData(monitoringStation!!.stationName!!)
+
+                        // 데이터 업데이트
+                        _stationName.value = monitoringStation.stationName
+                        _stationAddress.value = monitoringStation.addr
+                        _airQualityGrade.value = measuredValue?.khaiGrade ?: Grade.UNKNOWN
+                        _dustData.value = "미세먼지: ${measuredValue?.pm10Value ?: "N/A"} ㎍/㎥ ${measuredValue?.pm10Grade?.emoji ?: ""}"
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                // 위치 가져오기 실패 시 처리
+                _stationName.value = "위치 오류"
+                _stationAddress.value = e.localizedMessage ?: "위치를 가져올 수 없습니다."
+            }
+    }
+
 
 
     fun updateImageUri(classification: String, uri: Uri) = viewModelScope.launch {
@@ -100,12 +161,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         Log.d("MainViewModel", "Loaded image URIs from Room: $imageMap")
     }
 
-    // Load dust information for the area
     fun loadDustInfo(area: String) = viewModelScope.launch {
-
         _isLoading.value = true
         Log.d("loaddustsifo", "loadDustInfo: $area")
-        // execute if the currently selected city is not null
+
         selectedCity.value?.let { city ->
             try {
                 Log.d("loadDustSuc", "city: $city")
@@ -123,23 +182,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                             // execute if the dust item is not empty
                             if (!items.isNullOrEmpty()) {
-                                // Get the first matching dust item
-                                Log.d("dustItem ", "loadDustInfo, matchingItems: $items")
-                                val dustItem = items.firstOrNull()
-                                // Set the acquired dust item to StateFlow
-                                _dustData.value = dustItem
-                                Log.d("dustItem", "loadDustInfo: $dustItem")
+                                // Check if the first 2 characters of area and stationName match
+                                val dustItem = items.firstOrNull { item ->
+                                    item.stationName.take(2) == area.take(2)
+                                }
 
-                                // Logging after classifying the value
-                                val classification = classifyAirQuality(
-                                    pm10Value = dustItem?.pm10Value,
-                                    pm25Value = dustItem?.pm25Value,
-                                    o3Value = dustItem?.o3Value
-                                )
-                                // Set the classification result to StateFlow
-                                _airQualityClassification.value = classification
-                                Log.i("AirQuality", classification)
-                                Log.i("AirQuality", "${dustItem?.o3Value}")
+                                if (dustItem != null) {
+                                    // Set the acquired dust item to StateFlow
+                                    _dustData.value = dustItem
+                                    Log.d("dustItem", "loadDustInfo: $dustItem")
+
+                                    // Logging after classifying the value
+                                    val classification = classifyAirQuality(
+                                        pm10Value = dustItem.pm10Value,
+                                        pm25Value = dustItem.pm25Value,
+                                        o3Value = dustItem.o3Value
+                                    )
+                                    // Set the classification result to StateFlow
+                                    _airQualityClassification.value = classification.toString()
+                                    Log.i("AirQuality", classification.toString())
+                                    Log.i("AirQuality", "${dustItem.pm10Value}")
+                                } else {
+                                    Log.e("MainViewModel", "No matching dust item found for $area")
+                                }
                             } else {
                                 // Failed to get dust information
                                 Log.e("MainViewModel", "Error: ${response.errorBody()?.string()}")
@@ -158,45 +223,38 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun requestLocation() {
-        if (ContextCompat.checkSelfPermission(
-                getApplication(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
-            getLocation()
 
 
-        } else {
-            Log.d("requestLocation", "requestLocation: 권한")
-            // 권한 요청 로직 추가
-            // requestLocationPermission()을 호출하여 권한을 요청합니다.
-        }
-    }
-
-
-    @SuppressLint("MissingPermission")
-    private fun getLocation() {
-        fusedLocationProviderClient.lastLocation
-            .addOnSuccessListener { location ->
-                location?.let {
-                    getAddress(it.latitude, it.longitude)
-                } ?: run {
-                    _locationAddress.value = "위치를 가져올 수 없습니다."
-                }
-            }
-            .addOnFailureListener { e ->
-                _locationAddress.value = e.localizedMessage ?: "위치 오류"
-            }
-    }
+}
+//
+//    private suspend fun getNearbyCenter(latitude: Double, longitude: Double): Station? {
+//        val tmCoordinates = kakaoLocalAPI.getTmCoordinates(longitude, latitude)
+//            .body()?.documents
+//            ?.firstOrNull() // 첫번째 값 없으면 null
+//        val tmX = tmCoordinates?.x
+//        val tmY = tmCoordinates?.y
+//
+//        Log.d("NearbyCenter", "tmX: $tmX, tmY: $tmY")
+//
+//        return if (tmX != null && tmY != null) {
+//            airKoreaAPIService
+//                .getNearbyCenter(tmX, tmY)
+//                .body()
+//                ?.response
+//                ?.body
+//                ?.stations
+//                ?.minByOrNull { it.tm ?: Double.MAX_VALUE }
+//        } else {
+//            null
+//        }
+//    }
 
     private fun getAddress(lat: Double, lng: Double) {
         try {
             val geocoder = Geocoder(getApplication(), Locale.KOREA)
             val addressList: List<Address>? = geocoder.getFromLocation(lat, lng, 1)
             addressList?.firstOrNull()?.let { address ->
-                val adminArea = address.adminArea
-                val cityAbbreviation = when (adminArea) {
+                val cityAbbreviation = when (val adminArea = address.adminArea) {
                     "충청남도" -> "충남"
                     "충청북도" -> "충북"
                     "전라남도" -> "전남"
@@ -205,15 +263,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     "경상북도" -> "경북"
                     "강원도" -> "강원"
                     "경기도" -> "경기"
-                    else -> adminArea // 변환되지 않으면 원래 값 유지
+                    else -> adminArea
                 }
                 _locationAddress.value =
-                    "${cityAbbreviation} ${address.locality} ${address.thoroughfare}"
+                    "$cityAbbreviation ${address.locality} ${address.thoroughfare}"
                 _selectedCity.value = cityAbbreviation
                 Log.d("getAddress", "getAddress: ${_locationAddress.value}")
                 _locationAddress.value = _locationAddress.value.toString()
                 loadDustInfo(address.thoroughfare)
-
             } ?: run {
                 _locationAddress.value = "주소를 가져 올 수 없습니다."
             }
@@ -221,62 +278,84 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _locationAddress.value = "주소를 가져 올 수 없습니다."
         }
     }
-
 }
 
 
-fun classifyAirQuality(pm10Value: String?, pm25Value: String?, o3Value: String?): String {
+fun classifyAirQuality(
+    pm10Value: String?,
+    pm25Value: String?,
+    o3Value: String?
+): Map<String, String> {
     val pm10Int = pm10Value?.toIntOrNull()
     val pm25Int = pm25Value?.toIntOrNull()
     val o3Double = o3Value?.toDoubleOrNull()
 
     val pm10Grade = when {
         pm10Int == null -> 0
-        pm10Int <= 30 -> 1
-        pm10Int <= 80 -> 2
-        pm10Int <= 150 -> 3
-        else -> 4
+        pm10Int <= 15 -> 1
+        pm10Int <= 30 -> 2
+        pm10Int <= 40 -> 3
+        pm10Int <= 50 -> 4
+        pm10Int <= 76 -> 5
+        pm10Int <= 100 -> 6
+        pm10Int <= 150 -> 7
+        else -> 8
     }
 
     val pm25Grade = when {
         pm25Int == null -> 0
-        pm25Int <= 15 -> 1
-        pm25Int <= 35 -> 2
-        pm25Int <= 75 -> 3
-        else -> 4
+        pm25Int <= 8 -> 1
+        pm25Int <= 15 -> 2
+        pm25Int <= 20 -> 3
+        pm25Int <= 25 -> 4
+        pm25Int <= 37 -> 5
+        pm25Int <= 50 -> 6
+        pm25Int <= 75 -> 7
+        else -> 8
     }
 
     val o3Grade = when {
         o3Double == null -> 0
-        o3Double <= 0.030 -> 1
-        o3Double <= 0.090 -> 2
-        o3Double <= 0.150 -> 3
-        else -> 4
+        o3Double <= 0.020 -> 1
+        o3Double <= 0.030 -> 2
+        o3Double <= 0.060 -> 3
+        o3Double <= 0.090 -> 4
+        o3Double <= 0.120 -> 5
+        o3Double <= 0.150 -> 6
+        o3Double <= 0.380 -> 7
+        else -> 8
     }
-    val averageGrade = (pm10Grade + pm25Grade + o3Grade) / 3.0
+    val gradeDescriptions = mapOf(
+        1 to "최고 좋음",
+        2 to "좋음",
+        3 to "양호",
+        4 to "보통",
+        5 to "나쁨",
+        6 to "상당히 나쁨",
+        7 to "매우 매우 나쁨",
+        8 to "최악"
+    )
 
-    return when {
-        averageGrade <= 1 -> "좋음"
-        averageGrade <= 2 -> "보통"
-        averageGrade <= 3 -> "나쁨"
-        else -> "매우 나쁨"
-    }
+    return mapOf(
+        Pair("PM10", gradeDescriptions[pm10Grade] ?: "알 수 없음"),
+        Pair("PM2.5", gradeDescriptions[pm25Grade] ?: "알 수 없음"),
+        Pair("O3", gradeDescriptions[o3Grade] ?: "알 수 없음")
+    )
 }
+//    val averageGrade = (pm10Grade + pm25Grade + o3Grade) / 3.0
+//
+//    return when {
+//        averageGrade <= 1 -> "좋음"
+//        averageGrade <= 2 -> "보통"
+//        averageGrade <= 3 -> "나쁨"
+//        else -> "매우 나쁨"
+//    }
+
 
 suspend fun fetchDustInfo(
-    serviceKey: String,
-    city: String,
-    area: String
+    stationName:String
 ): Response<DustResponse> {
-    return NetworkClient.dustNetWork.getDust(
-        serviceKey = serviceKey,
-        returnType = "json",
-        numOfRows = "100",
-        pageNo = "1",
-        sidoName = city,
-        sggName = area,
-        stationName = area,
-        dataTerm = "daily",
-        ver = "1.3"
+    return AirKoreaApiService.getRealtimeAirQualities(
+        stationName = stationName,
     )
 }
