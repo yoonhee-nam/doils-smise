@@ -13,7 +13,8 @@ plugins {
 }
 
 
-val properties = Properties().apply { load(FileInputStream(rootProject.file("local.properties"))) }
+val properties = Properties()
+properties.load(project.rootProject.file("local.properties").inputStream())
 
 android {
     namespace = "com.example.doilmise"
@@ -27,7 +28,9 @@ android {
         versionName = "1.0"
 
         buildConfigField("String", "api_key", properties.getProperty("api_key"))
+        buildConfigField("String", "kakao_key", properties.getProperty("kakao_key"))
         manifestPlaceholders["api_key"] = properties.getProperty("api_key")
+        manifestPlaceholders["kakao_key"] = properties.getProperty("kakao_key")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

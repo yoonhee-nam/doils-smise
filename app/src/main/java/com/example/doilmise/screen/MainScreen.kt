@@ -1,5 +1,6 @@
 package com.example.doilmise.screen
 
+import android.Manifest
 import android.content.Intent
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -17,6 +18,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -33,37 +35,101 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.doilmise.MainViewModel
 import com.example.doilmise.R
+import com.example.doilmise.data.Grade
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
-
-
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
-    val airQualityClassification by viewModel.airQualityClassification.collectAsState()
+    val airQualityGrade by viewModel.airQualityGrade.collectAsState()
     val dustData by viewModel.dustData.collectAsState()
     val locationText by viewModel.locationAddress.observeAsState("위치 정보를 로딩 중입니다...")
     val imageUris by viewModel.imageUris.collectAsState()
 
     val context = LocalContext.current
 
-    val launcherForGood =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        uri?.let {
-            try {
-                // 권한 부여
-                context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                viewModel.updateImageUri("좋음", it)
-            } catch (e: SecurityException) {
-                Log.e("MainScreen", "Failed to take persistable URI permission", e)
-            }
+    val locationPermissionGranted by viewModel.locationPermissionGranted.collectAsState()
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.requestLocation() // 권한이 허용된 경우 위치 요청
+        } else {
+            // 권한이 거부된 경우 처리할 작업 추가 가능
+            Log.d("MainScreen", "Location permission denied")
         }
     }
+
+    LaunchedEffect(locationPermissionGranted) {
+        if (!locationPermissionGranted) {
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+
+    var showDialog by remember { mutableStateOf(false) }
+
+    // 이미지 리소스와 배경색을 설정하는 함수
+    val imageUri = imageUris[airQualityGrade.name] ?: R.drawable.base
+    Log.d("MainScreen", "Current imageUri: $imageUri")
+
+
+    val airQualityInfo = when (airQualityGrade) {
+        Grade.BEST -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "산책가도 좋을 날씨네요!"))
+        Grade.GOOD -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "좋음가도 좋을 날씨네요!"))
+        Grade.FAIR -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "양호가도 좋을 날씨네요!"))
+        Grade.NORMAL -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "보통가도 좋을 날씨네요!"))
+        Grade.BAD -> Pair(R.drawable.soso, Pair(Color(0xFFB7E0FF), "민감하신 분들은 주의하세요."))
+        Grade.VERY_BAD -> Pair(R.drawable.bad, Pair(Color(0xFFFFB2B2), "마스크 챙기셨죠?"))
+        Grade.EXTREMELY_BAD -> Pair(R.drawable.terrible, Pair(Color(0xFF4F1787), "외출은 최대한 피해주세요 ㅠㅠ"))
+        Grade.WORST -> Pair(R.drawable.terrible, Pair(Color(0xFF4F1787), "외출은 최대한 피해주세요 ㅠㅠ"))
+        else -> Pair(R.drawable.base, Pair(Color.Black, "")) // 기본 색상
+    }
+
+    val backgroundColor = airQualityInfo.second.first
+    val subscriptions = airQualityInfo.second.second
+
+    val launcherForBest =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let {
+                try {
+                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    viewModel.updateImageUri("최고 좋음", it)
+                } catch (e: SecurityException) {
+                    Log.e("MainScreen", "Failed to take persistable URI permission", e)
+                }
+            }
+        }
+
+    val launcherForGood =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let {
+                try {
+                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    viewModel.updateImageUri("좋음", it)
+                } catch (e: SecurityException) {
+                    Log.e("MainScreen", "Failed to take persistable URI permission", e)
+                }
+            }
+        }
+
+    val launcherForFair =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let {
+                try {
+                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    viewModel.updateImageUri("양호", it)
+                } catch (e: SecurityException) {
+                    Log.e("MainScreen", "Failed to take persistable URI permission", e)
+                }
+            }
+        }
+
     val launcherForNormal =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {
                 try {
-                    // 영구 권한 요청
                     context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                     viewModel.updateImageUri("보통", it)
                 } catch (e: SecurityException) {
@@ -71,43 +137,55 @@ fun MainScreen(viewModel: MainViewModel) {
                 }
             }
         }
+
     val launcherForBad =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {
-                context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                viewModel.updateImageUri("나쁨", it)
+                try {
+                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    viewModel.updateImageUri("나쁨", it)
+                } catch (e: SecurityException) {
+                    Log.e("MainScreen", "Failed to take persistable URI permission", e)
+                }
             }
         }
+
     val launcherForVeryBad =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {
-                context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                viewModel.updateImageUri("매우 나쁨", it)
+                try {
+                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    viewModel.updateImageUri("상당히 나쁨", it)
+                } catch (e: SecurityException) {
+                    Log.e("MainScreen", "Failed to take persistable URI permission", e)
+                }
             }
         }
 
-    var showDialog by remember { mutableStateOf(false) }
+    val launcherForExtremelyBad =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let {
+                try {
+                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    viewModel.updateImageUri("매우 매우 나쁨", it)
+                } catch (e: SecurityException) {
+                    Log.e("MainScreen", "Failed to take persistable URI permission", e)
+                }
+            }
+        }
 
-    // 이미지 리소스와 배경색을 설정하는 함수
-    val imageUri = imageUris[airQualityClassification]?: R.drawable.base
-    Log.d("MainScreen", "Current imageUri: $imageUri")
+    val launcherForWorst =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let {
+                try {
+                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    viewModel.updateImageUri("최악", it)
+                } catch (e: SecurityException) {
+                    Log.e("MainScreen", "Failed to take persistable URI permission", e)
+                }
+            }
+        }
 
-
-    val airQualityInfo = when (airQualityClassification) {
-        "좋음" -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "산책가도 좋을 날씨네요!"))
-        "보통" -> Pair(R.drawable.soso, Pair(Color(0xFFB7E0FF), "민감하신 분들은 주의하세요."))
-        "나쁨" -> Pair(R.drawable.bad, Pair(Color(0xFFFFB2B2), "마스크 챙기셨죠?"))
-        "매우 나쁨" -> Pair(R.drawable.terrible, Pair(Color(0xFF4F1787), "외출은 최대한 피해주세요 ㅠㅠ"))
-        else -> Pair(R.drawable.base, Pair(Color.White, "")) // 기본 색상
-    }
-
-    val defaultImageResId = airQualityInfo.first
-    val backgroundColor = airQualityInfo.second.first
-    val subscriptions = airQualityInfo.second.second
-
-
-
-    // 이미지 선택 다이얼로그
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
@@ -116,21 +194,44 @@ fun MainScreen(viewModel: MainViewModel) {
             confirmButton = {
                 Column {
                     TextButton(onClick = {
+                        launcherForBest.launch(arrayOf("image/*"))
+                        showDialog = false
+                    }) { Text("최고 좋음") }
+
+                    TextButton(onClick = {
                         launcherForGood.launch(arrayOf("image/*"))
                         showDialog = false
                     }) { Text("좋음") }
+
+                    TextButton(onClick = {
+                        launcherForFair.launch(arrayOf("image/*"))
+                        showDialog = false
+                    }) { Text("양호") }
+
                     TextButton(onClick = {
                         launcherForNormal.launch(arrayOf("image/*"))
                         showDialog = false
                     }) { Text("보통") }
+
                     TextButton(onClick = {
                         launcherForBad.launch(arrayOf("image/*"))
                         showDialog = false
                     }) { Text("나쁨") }
+
                     TextButton(onClick = {
                         launcherForVeryBad.launch(arrayOf("image/*"))
                         showDialog = false
-                    }) { Text("매우 나쁨") }
+                    }) { Text("상당히 나쁨") }
+
+                    TextButton(onClick = {
+                        launcherForExtremelyBad.launch(arrayOf("image/*"))
+                        showDialog = false
+                    }) { Text("매우 매우 나쁨") }
+
+                    TextButton(onClick = {
+                        launcherForWorst.launch(arrayOf("image/*"))
+                        showDialog = false
+                    }) { Text("최악") }
                 }
             },
             dismissButton = {
@@ -146,7 +247,7 @@ fun MainScreen(viewModel: MainViewModel) {
     SwipeRefresh(
         state = swipeRefreshState,
         onRefresh = {
-            viewModel.loadDustInfo(viewModel.selectedArea.value ?: "") // 스와이프 시 데이터 로드
+            viewModel.fetchAirQualityData() // 스와이프 시 데이터 로드
         }
     ) {
         LazyColumn(
@@ -194,7 +295,7 @@ fun MainScreen(viewModel: MainViewModel) {
                     )
 
                     Text(
-                        text = airQualityClassification,
+                        text = airQualityGrade.name,
                         fontSize = 50.sp,
                         color = Color.White,
                         modifier = Modifier.padding(top = 20.dp,bottom = 8.dp) // 위쪽 패딩 추가
@@ -208,7 +309,7 @@ fun MainScreen(viewModel: MainViewModel) {
                     )
 
                     Text(
-                        text = "$dataText ㎍/㎥",
+                        text = "PM10: ${dustData?.pm10Value}㎍/㎥",
                         fontSize = 16.sp,
                         color = Color.White,
                         modifier = Modifier.padding(top = 8.dp) // 아래쪽 패딩 추가
