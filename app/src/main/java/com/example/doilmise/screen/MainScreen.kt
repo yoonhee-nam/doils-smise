@@ -95,7 +95,7 @@ fun MainScreen(viewModel: MainViewModel) {
             uri?.let {
                 try {
                     context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    viewModel.updateImageUri("최고 좋음", it)
+                    viewModel.updateImageUri(Grade.BEST.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
                 }
@@ -107,7 +107,7 @@ fun MainScreen(viewModel: MainViewModel) {
             uri?.let {
                 try {
                     context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    viewModel.updateImageUri("좋음", it)
+                    viewModel.updateImageUri(Grade.GOOD.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
                 }
@@ -119,7 +119,7 @@ fun MainScreen(viewModel: MainViewModel) {
             uri?.let {
                 try {
                     context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    viewModel.updateImageUri("양호", it)
+                    viewModel.updateImageUri(Grade.FAIR.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
                 }
@@ -131,7 +131,7 @@ fun MainScreen(viewModel: MainViewModel) {
             uri?.let {
                 try {
                     context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                    viewModel.updateImageUri("보통", it)
+                    viewModel.updateImageUri(Grade.NORMAL.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
                 }
@@ -143,7 +143,7 @@ fun MainScreen(viewModel: MainViewModel) {
             uri?.let {
                 try {
                     context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    viewModel.updateImageUri("나쁨", it)
+                    viewModel.updateImageUri(Grade.BAD.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
                 }
@@ -155,7 +155,7 @@ fun MainScreen(viewModel: MainViewModel) {
             uri?.let {
                 try {
                     context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    viewModel.updateImageUri("상당히 나쁨", it)
+                    viewModel.updateImageUri(Grade.VERY_BAD.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
                 }
@@ -167,7 +167,7 @@ fun MainScreen(viewModel: MainViewModel) {
             uri?.let {
                 try {
                     context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    viewModel.updateImageUri("매우 매우 나쁨", it)
+                    viewModel.updateImageUri(Grade.EXTREMELY_BAD.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
                 }
@@ -179,12 +179,13 @@ fun MainScreen(viewModel: MainViewModel) {
             uri?.let {
                 try {
                     context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    viewModel.updateImageUri("최악", it)
+                    viewModel.updateImageUri(Grade.WORST.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
                 }
             }
         }
+
 
     if (showDialog) {
         AlertDialog(

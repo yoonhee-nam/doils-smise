@@ -7,7 +7,7 @@ import com.example.doilmise.R
 import com.google.gson.annotations.SerializedName
 
 enum class Grade(
-    private val label: String,
+    val label: String,
     private val emoji: String,
     @ColorRes val colorResId: Int
 ) {

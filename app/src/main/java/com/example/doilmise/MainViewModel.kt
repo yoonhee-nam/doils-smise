@@ -123,7 +123,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
                             // 측정소에서 공기질 데이터를 가져옵니다
                             val measuredValue =
-                                Repository.getLatestAirQualityData(monitoringStation!!.stationName!!)
+                                Repository.getLatestAirQualityData(monitoringStation!!.stationName)
 
                             // 데이터를 Item 객체로 매핑하여 StateFlow에 업데이트
                             val airQualityData = Item(
@@ -187,6 +187,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val currentMap = _imageUris.value.toMutableMap()
         currentMap[classification] = uri
         _imageUris.value = currentMap
+        Log.d("MainViewModel", "updateImageUri image URIs from Room: $currentMap")
 
         // 영구 URI 권한 요청, 예외 처리 추가
         try {
