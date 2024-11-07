@@ -35,15 +35,13 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.doilmise.MainViewModel
 import com.example.doilmise.R
-import com.example.doilmise.classifyAirQuality
+import com.example.doilmise.data.Grade
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
-
-
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
-    val airQualityClassification by viewModel.airQualityClassification.collectAsState()
+    val airQualityGrade by viewModel.airQualityGrade.collectAsState()
     val dustData by viewModel.dustData.collectAsState()
     val locationText by viewModel.locationAddress.observeAsState("위치 정보를 로딩 중입니다...")
     val imageUris by viewModel.imageUris.collectAsState()
@@ -68,6 +66,29 @@ fun MainScreen(viewModel: MainViewModel) {
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
+
+
+    var showDialog by remember { mutableStateOf(false) }
+
+    // 이미지 리소스와 배경색을 설정하는 함수
+    val imageUri = imageUris[airQualityGrade.name] ?: R.drawable.base
+    Log.d("MainScreen", "Current imageUri: $imageUri")
+
+
+    val airQualityInfo = when (airQualityGrade) {
+        Grade.BEST -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "산책가도 좋을 날씨네요!"))
+        Grade.GOOD -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "좋음가도 좋을 날씨네요!"))
+        Grade.FAIR -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "양호가도 좋을 날씨네요!"))
+        Grade.NORMAL -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "보통가도 좋을 날씨네요!"))
+        Grade.BAD -> Pair(R.drawable.soso, Pair(Color(0xFFB7E0FF), "민감하신 분들은 주의하세요."))
+        Grade.VERY_BAD -> Pair(R.drawable.bad, Pair(Color(0xFFFFB2B2), "마스크 챙기셨죠?"))
+        Grade.EXTREMELY_BAD -> Pair(R.drawable.terrible, Pair(Color(0xFF4F1787), "외출은 최대한 피해주세요 ㅠㅠ"))
+        Grade.WORST -> Pair(R.drawable.terrible, Pair(Color(0xFF4F1787), "외출은 최대한 피해주세요 ㅠㅠ"))
+        else -> Pair(R.drawable.base, Pair(Color.Black, "")) // 기본 색상
+    }
+
+    val backgroundColor = airQualityInfo.second.first
+    val subscriptions = airQualityInfo.second.second
 
     val launcherForBest =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -165,32 +186,6 @@ fun MainScreen(viewModel: MainViewModel) {
             }
         }
 
-    var showDialog by remember { mutableStateOf(false) }
-
-    // 이미지 리소스와 배경색을 설정하는 함수
-    val imageUri = imageUris[airQualityClassification]?: R.drawable.base
-    Log.d("MainScreen", "Current imageUri: $imageUri")
-
-
-    val airQualityInfo = when (airQualityClassification) {
-        "최고 좋음" -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "산책가도 좋을 날씨네요!"))
-        "좋음" -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "좋음가도 좋을 날씨네요!"))
-        "양호" -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "양호가도 좋을 날씨네요!"))
-        "보통" -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "보통가도 좋을 날씨네요!"))
-        "나쁨" -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "나쁨가도 좋을 날씨네요!"))
-        "상당히 나쁨" -> Pair(R.drawable.soso, Pair(Color(0xFFB7E0FF), "민감하신 분들은 주의하세요."))
-        "매우 매우 나쁨" -> Pair(R.drawable.bad, Pair(Color(0xFFFFB2B2), "마스크 챙기셨죠?"))
-        "최악" -> Pair(R.drawable.terrible, Pair(Color(0xFF4F1787), "외출은 최대한 피해주세요 ㅠㅠ"))
-        else -> Pair(R.drawable.base, Pair(Color.Black, "")) // 기본 색상
-    }
-
-    val defaultImageResId = airQualityInfo.first
-    val backgroundColor = airQualityInfo.second.first
-    val subscriptions = airQualityInfo.second.second
-
-    val airQualityData = classifyAirQuality("45", "25", "0.05")
-    val pm10Value = (airQualityData["PM10"] as? Map<*, *>)?.get("value") ?: "데이터 없음"
-
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
@@ -252,7 +247,7 @@ fun MainScreen(viewModel: MainViewModel) {
     SwipeRefresh(
         state = swipeRefreshState,
         onRefresh = {
-            viewModel.loadDustInfo(viewModel.selectedArea.value ?: "") // 스와이프 시 데이터 로드
+            viewModel.fetchAirQualityData() // 스와이프 시 데이터 로드
         }
     ) {
         LazyColumn(
@@ -300,7 +295,7 @@ fun MainScreen(viewModel: MainViewModel) {
                     )
 
                     Text(
-                        text = airQualityClassification,
+                        text = airQualityGrade.name,
                         fontSize = 50.sp,
                         color = Color.White,
                         modifier = Modifier.padding(top = 20.dp,bottom = 8.dp) // 위쪽 패딩 추가
@@ -314,7 +309,7 @@ fun MainScreen(viewModel: MainViewModel) {
                     )
 
                     Text(
-                        text = "PM10: ${pm10Value}㎍/㎥",
+                        text = "PM10: ${dustData?.pm10Value}㎍/㎥",
                         fontSize = 16.sp,
                         color = Color.White,
                         modifier = Modifier.padding(top = 8.dp) // 아래쪽 패딩 추가

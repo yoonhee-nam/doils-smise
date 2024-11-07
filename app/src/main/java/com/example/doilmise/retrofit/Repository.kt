@@ -1,9 +1,7 @@
 package com.example.doilmise.retrofit
 
-
-import com.example.doilmise.BuildConfig
+import com.example.doilmise.data.airqualitypackage.Item
 import com.example.doilmise.retrofit.airo.AirKoreaApiService
-import com.example.doilmise.retrofit.airo.MonitoringStation
 import com.example.doilmise.retrofit.kakao.KakaoLocalApiService
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
@@ -23,20 +21,9 @@ object Repository {
 
     private fun buildHttpClient(): OkHttpClient =
         OkHttpClient.Builder()
-            .addInterceptor(
-                HttpLoggingInterceptor().apply {
-                    level = if (BuildConfig.DEBUG) {
-                        // DEBUG일때만 다 보여주기
-                        HttpLoggingInterceptor.Level.BODY
-                    } else {
-                        // NONE : 보여주지 않음
-                        HttpLoggingInterceptor.Level.NONE
-                    }
-                }
-            )
             .build()
 
-    suspend fun getNearbyMonitoringStation(latitude: Double, longitude: Double): MonitoringStation? {
+    suspend fun getNearbyMonitoringStation(latitude: Double, longitude: Double): com.example.doilmise.retrofit.airo.Item? {
         val tmCoordinates = kakaoLocalApiService
             .getTmCoordinates(longitude, latitude)
             .body()
@@ -51,7 +38,7 @@ object Repository {
             .body()
             ?.response
             ?.body
-            ?.monitoringStations
+            ?.items
             // 선택한 요소를 비교해 가장 작은 값을 전달하고 null인 값은 자동으로 후순위로 밀림
             // => 가장 가까운 측정소 하나만 받아오게 됨
             ?.minByOrNull { it.tm ?: Double.MAX_VALUE }
@@ -59,19 +46,19 @@ object Repository {
 
     private val airKoreaApiService: AirKoreaApiService by lazy {
         Retrofit.Builder()
-            .baseUrl("http://apis.data.go.kr/")
+            .baseUrl("https://apis.data.go.kr/")
             .addConverterFactory(GsonConverterFactory.create())
             .client(buildHttpClient())
             .build()
             .create()
     }
 
-    suspend fun getLatestAirQualityData(stationName: String): MeasuredValue? =
+    suspend fun getLatestAirQualityData(stationName: String): Item? =
         airKoreaApiService
             .getRealtimeAirQualities(stationName)
             .body()
             ?.response
             ?.body
-            ?.measuredValues
+            ?.items
             ?.firstOrNull()
 }

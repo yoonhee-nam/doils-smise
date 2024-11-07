@@ -3,6 +3,7 @@ package com.example.doilmise.retrofit.airo
 
 
 import com.example.doilmise.BuildConfig
+import com.example.doilmise.data.airqualitypackage.AirQualityResponse
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -15,7 +16,7 @@ interface AirKoreaApiService {
     suspend fun getNearbyMonitoringStation(
         @Query("tmX") tmX: Double,
         @Query("tmY") tmY: Double
-    ): Response<MonitoringStationsResponse>
+    ): Response<monitoringstation>
 
     @GET("B552584/ArpltnInforInqireSvc/getMsrstnAcctoRltmMesureDnsty" +
             "?serviceKey=${BuildConfig.api_key}" +
@@ -24,6 +25,6 @@ interface AirKoreaApiService {
             "&ver=1.3")
     suspend fun getRealtimeAirQualities(
         @Query("stationName") stationName: String
-    ): Response<DustResponse>
+    ): Response<AirQualityResponse>
 
 }

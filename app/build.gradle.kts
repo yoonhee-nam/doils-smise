@@ -114,7 +114,6 @@ dependencies {
     //retrofit2
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
-    implementation(libs.logging.interceptor)
 
     //coil
     implementation(libs.coil.compose)
