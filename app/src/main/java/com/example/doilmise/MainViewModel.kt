@@ -19,14 +19,12 @@ import com.example.doilmise.data.Grade
 import com.example.doilmise.data.ImageEntity
 import com.example.doilmise.data.airqualitypackage.Item
 import com.example.doilmise.retrofit.Repository
-import com.example.doilmise.retrofit.airo.AirKoreaApiService
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import retrofit2.Response
 import java.io.IOException
 import java.util.Locale
 

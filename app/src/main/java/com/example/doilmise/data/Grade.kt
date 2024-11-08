@@ -1,5 +1,6 @@
 package com.example.doilmise.data
 
+import android.graphics.Color
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.annotation.ColorRes
@@ -9,33 +10,32 @@ import com.google.gson.annotations.SerializedName
 enum class Grade(
     val label: String,
     private val emoji: String,
-    @ColorRes val colorResId: Int
 ) {
     @SerializedName("1")
-    BEST("최고 좋음", "😇", R.color.black),
+    BEST("최고 좋음", "😇"),
 
     @SerializedName("2")
-    GOOD("좋음", "😊", R.color.black),
+    GOOD("좋음", "😊"),
 
     @SerializedName("3")
-    FAIR("양호", "🙂", R.color.black),
+    FAIR("양호", "🙂",),
 
     @SerializedName("4")
-    NORMAL("보통", "😐", R.color.black),
+    NORMAL("보통", "😐", ),
 
     @SerializedName("5")
-    BAD("나쁨", "😰", R.color.black),
+    BAD("나쁨", "😰", ),
 
     @SerializedName("6")
-    VERY_BAD("상당히 나쁨", "😷", R.color.black),
+    VERY_BAD("상당히 나쁨", "😷", ),
 
     @SerializedName("7")
-    EXTREMELY_BAD("매우 매우 나쁨", "🤢", R.color.black),
+    EXTREMELY_BAD("매우 매우 나쁨", "🤢", ),
 
     @SerializedName("8")
-    WORST("최악", "😵", R.color.black),
+    WORST("최악", "😵", ),
 
-    UNKNOWN("미측정", "🙄", R.color.black);
+    UNKNOWN("미측정", "🙄",);
 
     override fun toString(): String {
         return "$label $emoji"

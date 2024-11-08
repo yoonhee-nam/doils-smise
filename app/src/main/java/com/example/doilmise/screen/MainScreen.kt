@@ -1,6 +1,7 @@
 package com.example.doilmise.screen
 
 import android.Manifest
+import android.app.Application
 import android.content.Intent
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -30,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -76,15 +78,15 @@ fun MainScreen(viewModel: MainViewModel) {
 
 
     val airQualityInfo = when (airQualityGrade) {
-        Grade.BEST -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "산책가도 좋을 날씨네요!"))
-        Grade.GOOD -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "좋음가도 좋을 날씨네요!"))
-        Grade.FAIR -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "양호가도 좋을 날씨네요!"))
-        Grade.NORMAL -> Pair(R.drawable.good, Pair(Color(0xFF00FF9C), "보통가도 좋을 날씨네요!"))
-        Grade.BAD -> Pair(R.drawable.soso, Pair(Color(0xFFB7E0FF), "민감하신 분들은 주의하세요."))
-        Grade.VERY_BAD -> Pair(R.drawable.bad, Pair(Color(0xFFFFB2B2), "마스크 챙기셨죠?"))
-        Grade.EXTREMELY_BAD -> Pair(R.drawable.terrible, Pair(Color(0xFF4F1787), "외출은 최대한 피해주세요 ㅠㅠ"))
-        Grade.WORST -> Pair(R.drawable.terrible, Pair(Color(0xFF4F1787), "외출은 최대한 피해주세요 ㅠㅠ"))
-        else -> Pair(R.drawable.base, Pair(Color.Black, "")) // 기본 색상
+        Grade.BEST -> Pair(R.drawable.good, Pair(Color(0xFF2b75bb), "산책가도 좋을 날씨네요!"))
+        Grade.GOOD -> Pair(R.drawable.good, Pair(Color(0xFF2899d4), "좋음가도 좋을 날씨네요!"))
+        Grade.FAIR -> Pair(R.drawable.good, Pair(Color(0xFF16adc2), "양호가도 좋을 날씨네요!"))
+        Grade.NORMAL -> Pair(R.drawable.good, Pair(Color(0xFF349043), "보통가도 좋을 날씨네요!"))
+        Grade.BAD -> Pair(R.drawable.soso, Pair(Color(0xFFf68d1e), "민감하신 분들은 주의하세요."))
+        Grade.VERY_BAD -> Pair(R.drawable.bad, Pair(Color(0xFFe74d25), "마스크 챙기셨죠?"))
+        Grade.EXTREMELY_BAD -> Pair(R.drawable.terrible, Pair(Color(0xFFd52e2f), "외출은 최대한 피해주세요 ㅠㅠ"))
+        Grade.WORST -> Pair(R.drawable.terrible, Pair(Color(0xFF212121), "외출은 최대한 피해주세요 ㅠㅠ"))
+        else -> Pair(R.drawable.base, Pair(Color(0xFFa475d5), "")) // 기본 색상
     }
 
     val backgroundColor = airQualityInfo.second.first
@@ -267,7 +269,7 @@ fun MainScreen(viewModel: MainViewModel) {
                 {
 
                     val dateTimeText = dustData?.dataTime ?: "데이터를 불러오는 중입니다..."
-                    val dataText = dustData?.khaiValue ?: "데이터를 불러오는 중입니다..."
+                    //TODO{change font style }
 
                     Text(
                         text = locationText,
@@ -290,10 +292,12 @@ fun MainScreen(viewModel: MainViewModel) {
                             .size(300.dp)
                             .clip(CircleShape)
                             .clickable { showDialog = true },
+                        //TODO{chagned the background color }
                         onError = { error ->
                             Log.e("ImageLoadError", "Error loading image: $error")
                         }
                     )
+
 
                     Text(
                         text = airQualityGrade.name,
@@ -310,6 +314,7 @@ fun MainScreen(viewModel: MainViewModel) {
                     )
 
                     Text(
+                        //TODO{check data / add pm25 ,5zon data make in column}
                         text = "PM10: ${dustData?.pm10Value}㎍/㎥",
                         fontSize = 16.sp,
                         color = Color.White,
@@ -319,4 +324,11 @@ fun MainScreen(viewModel: MainViewModel) {
             }
         }
     }
+}
+
+@Composable
+@Preview
+fun MainPreview(){
+    val previewViewModel  = MainViewModel(Application())
+    MainScreen(viewModel = previewViewModel)
 }
