@@ -6,9 +6,12 @@ import android.content.Intent
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -31,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -96,7 +100,10 @@ fun MainScreen(viewModel: MainViewModel) {
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {
                 try {
-                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    context.contentResolver.takePersistableUriPermission(
+                        it,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
                     viewModel.updateImageUri(Grade.BEST.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
@@ -108,7 +115,10 @@ fun MainScreen(viewModel: MainViewModel) {
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {
                 try {
-                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    context.contentResolver.takePersistableUriPermission(
+                        it,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
                     viewModel.updateImageUri(Grade.GOOD.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
@@ -120,7 +130,10 @@ fun MainScreen(viewModel: MainViewModel) {
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {
                 try {
-                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    context.contentResolver.takePersistableUriPermission(
+                        it,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
                     viewModel.updateImageUri(Grade.FAIR.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
@@ -132,7 +145,10 @@ fun MainScreen(viewModel: MainViewModel) {
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {
                 try {
-                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                    context.contentResolver.takePersistableUriPermission(
+                        it,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    )
                     viewModel.updateImageUri(Grade.NORMAL.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
@@ -144,7 +160,10 @@ fun MainScreen(viewModel: MainViewModel) {
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {
                 try {
-                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    context.contentResolver.takePersistableUriPermission(
+                        it,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
                     viewModel.updateImageUri(Grade.BAD.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
@@ -156,7 +175,10 @@ fun MainScreen(viewModel: MainViewModel) {
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {
                 try {
-                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    context.contentResolver.takePersistableUriPermission(
+                        it,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
                     viewModel.updateImageUri(Grade.VERY_BAD.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
@@ -168,7 +190,10 @@ fun MainScreen(viewModel: MainViewModel) {
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {
                 try {
-                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    context.contentResolver.takePersistableUriPermission(
+                        it,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
                     viewModel.updateImageUri(Grade.EXTREMELY_BAD.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
@@ -180,7 +205,10 @@ fun MainScreen(viewModel: MainViewModel) {
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {
                 try {
-                    context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    context.contentResolver.takePersistableUriPermission(
+                        it,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
                     viewModel.updateImageUri(Grade.WORST.name, it)
                 } catch (e: SecurityException) {
                     Log.e("MainScreen", "Failed to take persistable URI permission", e)
@@ -275,7 +303,7 @@ fun MainScreen(viewModel: MainViewModel) {
                         text = locationText,
                         fontSize = 24.sp,
                         color = Color.White,
-                        modifier = Modifier.padding(top = 80.dp,bottom = 8.dp)
+                        modifier = Modifier.padding(top = 80.dp, bottom = 8.dp)
                     )
 
                     Text(
@@ -303,7 +331,7 @@ fun MainScreen(viewModel: MainViewModel) {
                         text = airQualityGrade.name,
                         fontSize = 50.sp,
                         color = Color.White,
-                        modifier = Modifier.padding(top = 20.dp,bottom = 8.dp) // 위쪽 패딩 추가
+                        modifier = Modifier.padding(top = 20.dp, bottom = 8.dp) // 위쪽 패딩 추가
                     )
 
                     Text(
@@ -312,23 +340,119 @@ fun MainScreen(viewModel: MainViewModel) {
                         color = Color.White,
                         modifier = Modifier.padding(bottom = 10.dp) // 위쪽 패딩 추가
                     )
+                    Row(
+                        modifier = Modifier
+                            .fillParentMaxWidth()
+                            .padding(10.dp)
+                    ) {
+                        Box(modifier = Modifier
+                            .weight(1f)
+                            .padding(5.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    //TODO{check data / add pm25 ,5zon data make in Row}
+                                    text = "PM10: ${dustData?.pm10Value}㎍/㎥",
+                                    fontSize = 16.sp,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
+                                Text(
+                                    text = "미세먼지",
+                                    fontSize = 16.sp,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
 
-                    Text(
-                        //TODO{check data / add pm25 ,5zon data make in column}
-                        text = "PM10: ${dustData?.pm10Value}㎍/㎥",
-                        fontSize = 16.sp,
-                        color = Color.White,
-                        modifier = Modifier.padding(top = 8.dp) // 아래쪽 패딩 추가
-                    )
+                                Image(
+                                    painter = painterResource(id = airQualityInfo.first),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(50.dp) //TODO control size
+                                )
+
+
+                                Text(
+                                    //TODO{check data / add pm25 ,5zon data make in Row}
+                                    text = "${dustData?.pm10Value}㎍/㎥",
+                                    fontSize = 16.sp,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(top = 8.dp) // 아래쪽 패딩 추가
+                                )
+                            }
+                        }
+                        Box(modifier = Modifier
+                            .weight(1f)
+                            .padding(5.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    //TODO{check data / add pm25 ,5zon data make in Row}
+                                    text = "${dustData?.pm10Value}㎍/㎥",
+                                    fontSize = 16.sp,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
+                                Text(
+                                    text = "초미세먼지",
+                                    fontSize = 16.sp,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
+
+                                Image(
+                                    painter = painterResource(id = airQualityInfo.first),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(50.dp) //TODO control size
+                                )
+
+
+                                Text(
+                                    //TODO{check data / add pm25 ,5zon data make in Row}
+                                    text = "${dustData?.pm10Value}㎍/㎥",
+                                    fontSize = 16.sp,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(top = 8.dp) // 아래쪽 패딩 추가
+                                )
+                            }
+                        }
+                        Box(modifier = Modifier
+                            .weight(1f)
+                            .padding(5.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    //TODO{check data / add pm25 ,5zon data make in Row}
+                                    text = "PM10: ${dustData?.pm10Value}㎍/㎥",
+                                    fontSize = 16.sp,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
+                                Text(
+                                    text = "미세먼지",
+                                    fontSize = 16.sp,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(top = 8.dp)
+                                )
+
+                                Image(
+                                    painter = painterResource(id = airQualityInfo.first),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(50.dp) //TODO control size
+                                )
+
+
+                                Text(
+                                    //TODO{check data / add pm25 ,5zon data make in Row}
+                                    text = "${dustData?.pm10Value}㎍/㎥",
+                                    fontSize = 16.sp,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(top = 8.dp) // 아래쪽 패딩 추가
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
     }
-}
-
-@Composable
-@Preview
-fun MainPreview(){
-    val previewViewModel  = MainViewModel(Application())
-    MainScreen(viewModel = previewViewModel)
 }

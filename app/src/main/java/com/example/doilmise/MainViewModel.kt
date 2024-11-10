@@ -59,6 +59,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _airQualityGrade = MutableStateFlow(Grade.UNKNOWN)
     val airQualityGrade: StateFlow<Grade> = _airQualityGrade.asStateFlow()
 
+    private val _10pmvalue = MutableStateFlow<Int?>(null)
+    val a10pmvalue : StateFlow<Int?> = _10pmvalue.asStateFlow()
+
     init {
         loadSavedImageUris()
         loadSomething()
