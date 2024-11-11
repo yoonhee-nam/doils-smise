@@ -8,7 +8,7 @@ import com.example.doilmise.R
 import com.google.gson.annotations.SerializedName
 
 enum class Grade(
-    private val label: String,
+    val label: String,
 ) {
     @SerializedName("1")
     BEST("최고 좋음"),
