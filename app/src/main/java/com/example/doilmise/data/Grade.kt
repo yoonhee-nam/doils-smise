@@ -9,35 +9,34 @@ import com.google.gson.annotations.SerializedName
 
 enum class Grade(
     val label: String,
-    private val emoji: String,
 ) {
     @SerializedName("1")
-    BEST("최고 좋음", "😇"),
+    BEST("최고 좋음"),
 
     @SerializedName("2")
-    GOOD("좋음", "😊"),
+    GOOD("좋음"),
 
     @SerializedName("3")
-    FAIR("양호", "🙂",),
+    FAIR("양호"),
 
     @SerializedName("4")
-    NORMAL("보통", "😐", ),
+    NORMAL("보통",),
 
     @SerializedName("5")
-    BAD("나쁨", "😰", ),
+    BAD("나쁨"),
 
     @SerializedName("6")
-    VERY_BAD("상당히 나쁨", "😷", ),
+    VERY_BAD("상당히 나쁨"),
 
     @SerializedName("7")
-    EXTREMELY_BAD("매우 매우 나쁨", "🤢", ),
+    EXTREMELY_BAD("매우 매우 나쁨"),
 
     @SerializedName("8")
-    WORST("최악", "😵", ),
+    WORST("최악"),
 
-    UNKNOWN("미측정", "🙄",);
+    UNKNOWN("미측정",);
 
     override fun toString(): String {
-        return "$label $emoji"
+        return label
     }
 }

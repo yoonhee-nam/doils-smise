@@ -59,6 +59,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _airQualityGrade = MutableStateFlow(Grade.UNKNOWN)
     val airQualityGrade: StateFlow<Grade> = _airQualityGrade.asStateFlow()
 
+    private val _10pmvalue = MutableStateFlow<Int?>(null)
+    val a10pmvalue : StateFlow<Int?> = _10pmvalue.asStateFlow()
+
     init {
         loadSavedImageUris()
         loadSomething()
@@ -115,11 +118,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 location?.let { loc ->
                     viewModelScope.launch {
                         try {
-                            // 위치를 기반으로 가장 가까운 측정소를 가져옵니다
+                            // 위치를 기반으로 가장 가까운 측정소를 가져오기
                             val monitoringStation =
                                 Repository.getNearbyMonitoringStation(loc.latitude, loc.longitude)
 
-                            // 측정소에서 공기질 데이터를 가져옵니다
+                            // 측정소에서 공기질 데이터
                             val measuredValue =
                                 Repository.getLatestAirQualityData(monitoringStation!!.stationName)
 
@@ -224,7 +227,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     else -> adminArea
                 }
                 _locationAddress.value =
-                    "$cityAbbreviation ${address.locality} ${address.thoroughfare}"
+                    "${address.locality} ${address.thoroughfare}"
                 Log.d("getAddress", "getAddress: ${_locationAddress.value}")
                 _locationAddress.value = _locationAddress.value.toString()
             } ?: run {
