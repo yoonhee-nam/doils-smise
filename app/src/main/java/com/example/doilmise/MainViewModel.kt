@@ -59,8 +59,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _airQualityGrade = MutableStateFlow(Grade.UNKNOWN)
     val airQualityGrade: StateFlow<Grade> = _airQualityGrade.asStateFlow()
 
-    private val _10pmvalue = MutableStateFlow<Int?>(null)
-    val a10pmvalue : StateFlow<Int?> = _10pmvalue.asStateFlow()
+    private val _pm10Grade = MutableStateFlow(Grade.UNKNOWN)
+    val pm10Grade: StateFlow<Grade> = _pm10Grade.asStateFlow()
+
+    private val _pm25Grade = MutableStateFlow(Grade.UNKNOWN)
+    val pm25Grade: StateFlow<Grade> = _pm25Grade.asStateFlow()
+
+    private val _o3Grade = MutableStateFlow(Grade.UNKNOWN)
+    val o3Grade: StateFlow<Grade> = _o3Grade.asStateFlow()
 
     init {
         loadSavedImageUris()
@@ -151,19 +157,58 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 so2Value = measuredValue?.so2Value ?: "데이터 없음"
                             )
 
-                            val grade = when (measuredValue?.khaiGrade) {
-                                "1" -> Grade.BEST
-                                "2" -> Grade.GOOD
-                                "3" -> Grade.FAIR
-                                "4" -> Grade.NORMAL
-                                "5" -> Grade.BAD
-                                "6" -> Grade.VERY_BAD
-                                "7" -> Grade.EXTREMELY_BAD
-                                "8" -> Grade.WORST
-                                else -> Grade.UNKNOWN
+                            val pm10Int = measuredValue?.pm10Value?.toIntOrNull()
+                            val pm25Int = measuredValue?.pm25Value?.toIntOrNull()
+                            val o3Double = measuredValue?.o3Value?.toDoubleOrNull()
+
+                            _pm10Grade.value = when {
+                                pm10Int == null -> Grade.UNKNOWN
+                                pm10Int <= 15 -> Grade.BEST
+                                pm10Int <= 30 -> Grade.GOOD
+                                pm10Int <= 40 -> Grade.FAIR
+                                pm10Int <= 50 -> Grade.NORMAL
+                                pm10Int <= 76 -> Grade.BAD
+                                pm10Int <= 100 -> Grade.VERY_BAD
+                                pm10Int <= 150 -> Grade.EXTREMELY_BAD
+                                else -> Grade.WORST
                             }
-                            _airQualityGrade.value = grade
-                            // 상태 업데이트
+
+                            _pm25Grade.value = when {
+                                pm25Int == null -> Grade.UNKNOWN
+                                pm25Int <= 8 -> Grade.BEST
+                                pm25Int <= 15 -> Grade.GOOD
+                                pm25Int <= 20 -> Grade.FAIR
+                                pm25Int <= 25 -> Grade.NORMAL
+                                pm25Int <= 37 -> Grade.BAD
+                                pm25Int <= 50 -> Grade.VERY_BAD
+                                pm25Int <= 75 -> Grade.EXTREMELY_BAD
+                                else -> Grade.WORST
+                            }
+
+                            _o3Grade.value = when {
+                                o3Double == null -> Grade.UNKNOWN
+                                o3Double <= 0.020 -> Grade.BEST
+                                o3Double <= 0.030 -> Grade.GOOD
+                                o3Double <= 0.060 -> Grade.FAIR
+                                o3Double <= 0.090 -> Grade.NORMAL
+                                o3Double <= 0.120 -> Grade.BAD
+                                o3Double <= 0.150 -> Grade.VERY_BAD
+                                o3Double <= 0.380 -> Grade.EXTREMELY_BAD
+                                else -> Grade.WORST
+                            }
+//                            val grade = when (measuredValue?.pm25Value) {
+//                                "1" -> Grade.BEST
+//                                "2" -> Grade.GOOD
+//                                "3" -> Grade.FAIR
+//                                "4" -> Grade.NORMAL
+//                                "5" -> Grade.BAD
+//                                "6" -> Grade.VERY_BAD
+//                                "7" -> Grade.EXTREMELY_BAD
+//                                "8" -> Grade.WORST
+//                                else -> Grade.UNKNOWN
+//                            }
+//                            _airQualityGrade.value = grade
+//                            // 상태 업데이트
                             _dustData.value = airQualityData
 
                             Log.d("fetchAirQualityData", "가장 가까운 측정소: ${monitoringStation.stationName}")

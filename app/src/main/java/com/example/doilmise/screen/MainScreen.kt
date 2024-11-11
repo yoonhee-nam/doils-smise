@@ -47,6 +47,11 @@ import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
+
+    val pm10Grade by viewModel.pm10Grade.collectAsState()
+    val pm25Grade by viewModel.pm25Grade.collectAsState()
+    val o3Grade by viewModel.o3Grade.collectAsState()
+
     val airQualityGrade by viewModel.airQualityGrade.collectAsState()
     val dustData by viewModel.dustData.collectAsState()
     val locationText by viewModel.locationAddress.observeAsState("위치 정보를 로딩 중입니다...")
@@ -80,8 +85,12 @@ fun MainScreen(viewModel: MainViewModel) {
     val imageUri = imageUris[airQualityGrade.name] ?: R.drawable.normal
     Log.d("MainScreen", "Current imageUri: $imageUri")
 
+    val highestGrade = listOf(viewModel.pm10Grade.value, viewModel.pm25Grade.value, viewModel.o3Grade.value)
+        .filterNotNull()
+        .maxByOrNull { it.ordinal } ?: Grade.NORMAL
 
-    val airQualityInfo = when (airQualityGrade) {
+
+    val airQualityInfo = when (highestGrade) {
         Grade.BEST -> Pair(R.drawable.best, Pair(Color(0xFF2b75bb), "산책가도 좋을 날씨네요!"))
         Grade.GOOD -> Pair(R.drawable.good, Pair(Color(0xFF2899d4), "좋음가도 좋을 날씨네요!"))
         Grade.FAIR -> Pair(R.drawable.fair, Pair(Color(0xFF16adc2), "양호가도 좋을 날씨네요!"))
@@ -96,6 +105,7 @@ fun MainScreen(viewModel: MainViewModel) {
         Grade.WORST -> Pair(R.drawable.worst, Pair(Color(0xFF212121), "외출은 최대한 피해주세요 ㅠㅠ"))
         else -> Pair(R.drawable.normal, Pair(Color(0xFFa475d5), "")) // 기본 색상
     }
+
 
     val backgroundColor = airQualityInfo.second.first
     val subscriptions = airQualityInfo.second.second
@@ -362,8 +372,20 @@ fun MainScreen(viewModel: MainViewModel) {
                                     modifier = Modifier.padding(top = 8.dp)
                                 )
 
+                                val pm10AirQualityInfo = when (pm10Grade) {
+                                    Grade.BEST -> Pair(R.drawable.best, Grade.BEST.label)
+                                    Grade.GOOD -> Pair(R.drawable.good, Grade.GOOD.label)
+                                    Grade.FAIR -> Pair(R.drawable.fair, Grade.FAIR.label)
+                                    Grade.NORMAL -> Pair(R.drawable.normal, Grade.NORMAL.label)
+                                    Grade.BAD -> Pair(R.drawable.bad, Grade.BAD.label)
+                                    Grade.VERY_BAD -> Pair(R.drawable.very_bad, Grade.VERY_BAD.label)
+                                    Grade.EXTREMELY_BAD -> Pair(R.drawable.extreamly_bad, Grade.EXTREMELY_BAD.label)
+                                    Grade.WORST -> Pair(R.drawable.worst, Grade.WORST.label)
+                                    else -> Pair(R.drawable.normal, Grade.UNKNOWN.label)
+                                }
+
                                 Image(
-                                    painter = painterResource(id = airQualityInfo.first),
+                                    painter = painterResource(id = pm10AirQualityInfo.first),
                                     contentDescription = null,
                                     modifier = Modifier.size(50.dp) //TODO control size
                                         .padding(5.dp)
@@ -371,7 +393,7 @@ fun MainScreen(viewModel: MainViewModel) {
 
                                 Text(
                                     //TODO chage text
-                                    text = "$airQualityGrade",
+                                    text = pm10AirQualityInfo.second,
                                     fontSize = 16.sp,
                                     color = Color.White,
                                 )
@@ -399,8 +421,21 @@ fun MainScreen(viewModel: MainViewModel) {
                                     modifier = Modifier.padding(top = 8.dp)
                                 )
 
+                                // 초미세먼지 (pm25) 관련 정보
+                                val pm25AirQualityInfo = when (pm25Grade) {
+                                    Grade.BEST -> Pair(R.drawable.best, Grade.BEST.label)
+                                    Grade.GOOD -> Pair(R.drawable.good, Grade.GOOD.label)
+                                    Grade.FAIR -> Pair(R.drawable.fair, Grade.FAIR.label)
+                                    Grade.NORMAL -> Pair(R.drawable.normal, Grade.NORMAL.label)
+                                    Grade.BAD -> Pair(R.drawable.bad, Grade.BAD.label)
+                                    Grade.VERY_BAD -> Pair(R.drawable.very_bad, Grade.VERY_BAD.label)
+                                    Grade.EXTREMELY_BAD -> Pair(R.drawable.extreamly_bad, Grade.EXTREMELY_BAD.label)
+                                    Grade.WORST -> Pair(R.drawable.worst, Grade.WORST.label)
+                                    else -> Pair(R.drawable.normal, Grade.UNKNOWN.label)
+                                }
+
                                 Image(
-                                    painter = painterResource(id = airQualityInfo.first),
+                                    painter = painterResource(id = pm25AirQualityInfo.first),
                                     contentDescription = null,
                                     modifier = Modifier.size(50.dp) //TODO control size
                                         .padding(5.dp)
@@ -408,7 +443,7 @@ fun MainScreen(viewModel: MainViewModel) {
                                 )
                                 Text(
                                     //TODO chage text
-                                    text = "$airQualityGrade",
+                                    text = pm25AirQualityInfo.second,
                                     fontSize = 16.sp,
                                     color = Color.White,
                                 )
@@ -436,15 +471,28 @@ fun MainScreen(viewModel: MainViewModel) {
                                     modifier = Modifier.padding(top = 8.dp)
                                 )
 
+                                // 오존 (o3) 관련 정보
+                                val o3AirQualityInfo = when (o3Grade) {
+                                    Grade.BEST -> Pair(R.drawable.best, Grade.BEST.label)
+                                    Grade.GOOD -> Pair(R.drawable.good, Grade.GOOD.label)
+                                    Grade.FAIR -> Pair(R.drawable.fair, Grade.FAIR.label)
+                                    Grade.NORMAL -> Pair(R.drawable.normal, Grade.NORMAL.label)
+                                    Grade.BAD -> Pair(R.drawable.bad, Grade.BAD.label)
+                                    Grade.VERY_BAD -> Pair(R.drawable.very_bad, Grade.VERY_BAD.label)
+                                    Grade.EXTREMELY_BAD -> Pair(R.drawable.extreamly_bad, Grade.EXTREMELY_BAD.label)
+                                    Grade.WORST -> Pair(R.drawable.worst, Grade.WORST.label)
+                                    else -> Pair(R.drawable.normal, Grade.UNKNOWN.label)
+                                }
+
                                 Image(
-                                    painter = painterResource(id = airQualityInfo.first),
+                                    painter = painterResource(id = o3AirQualityInfo.first),
                                     contentDescription = null,
                                     modifier = Modifier.size(50.dp) //TODO control size
                                         .padding(5.dp)
                                 )
                                 Text(
                                     //TODO chage text
-                                    text = "$airQualityGrade",
+                                    text = o3AirQualityInfo.second,
                                     fontSize = 16.sp,
                                     color = Color.White,
                                 )
@@ -462,3 +510,4 @@ fun MainScreen(viewModel: MainViewModel) {
         }
     }
 }
+
