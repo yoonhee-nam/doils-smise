@@ -52,7 +52,6 @@ fun MainScreen(viewModel: MainViewModel) {
     val pm25Grade by viewModel.pm25Grade.collectAsState()
     val o3Grade by viewModel.o3Grade.collectAsState()
 
-    val airQualityGrade by viewModel.airQualityGrade.collectAsState()
     val dustData by viewModel.dustData.collectAsState()
     val locationText by viewModel.locationAddress.observeAsState("위치 정보를 로딩 중입니다...")
     val imageUris by viewModel.imageUris.collectAsState()
@@ -81,14 +80,17 @@ fun MainScreen(viewModel: MainViewModel) {
 
     var showDialog by remember { mutableStateOf(false) }
 
-    // 이미지 리소스와 배경색을 설정하는 함수
-    val imageUri = imageUris[airQualityGrade.name] ?: R.drawable.normal
-    Log.d("MainScreen", "Current imageUri: $imageUri")
-
-    val highestGrade = listOf(viewModel.pm10Grade.value, viewModel.pm25Grade.value, viewModel.o3Grade.value)
-        .filterNotNull()
+    val highestGrade = listOfNotNull(
+        viewModel.pm10Grade.value,
+        viewModel.pm25Grade.value,
+        viewModel.o3Grade.value
+    )
         .maxByOrNull { it.ordinal } ?: Grade.NORMAL
 
+
+    // 이미지 리소스 설정
+    val imageUri = imageUris[highestGrade.name] ?: R.drawable.normal
+    Log.d("MainScreen", "Current imageUri: $imageUri")
 
     val airQualityInfo = when (highestGrade) {
         Grade.BEST -> Pair(R.drawable.best, Pair(Color(0xFF2b75bb), "산책가도 좋을 날씨네요!"))
@@ -106,6 +108,7 @@ fun MainScreen(viewModel: MainViewModel) {
         else -> Pair(R.drawable.normal, Pair(Color(0xFFa475d5), "")) // 기본 색상
     }
 
+    Log.d("highestGrade", "MainScreen:$highestGrade ")
 
     val backgroundColor = airQualityInfo.second.first
     val subscriptions = airQualityInfo.second.second
@@ -340,7 +343,7 @@ fun MainScreen(viewModel: MainViewModel) {
 
 
                     Text(
-                        text = airQualityGrade.label,
+                        text = highestGrade.toString(),
                         fontSize = 43.sp,
                         color = Color.White,
                         modifier = Modifier.padding(top = 20.dp, bottom = 8.dp)
@@ -387,7 +390,8 @@ fun MainScreen(viewModel: MainViewModel) {
                                 Image(
                                     painter = painterResource(id = pm10AirQualityInfo.first),
                                     contentDescription = null,
-                                    modifier = Modifier.size(50.dp) //TODO control size
+                                    modifier = Modifier
+                                        .size(50.dp) //TODO control size
                                         .padding(5.dp)
                                 )
 
@@ -437,7 +441,8 @@ fun MainScreen(viewModel: MainViewModel) {
                                 Image(
                                     painter = painterResource(id = pm25AirQualityInfo.first),
                                     contentDescription = null,
-                                    modifier = Modifier.size(50.dp) //TODO control size
+                                    modifier = Modifier
+                                        .size(50.dp) //TODO control size
                                         .padding(5.dp)
 
                                 )
@@ -487,7 +492,8 @@ fun MainScreen(viewModel: MainViewModel) {
                                 Image(
                                     painter = painterResource(id = o3AirQualityInfo.first),
                                     contentDescription = null,
-                                    modifier = Modifier.size(50.dp) //TODO control size
+                                    modifier = Modifier
+                                        .size(50.dp) //TODO control size
                                         .padding(5.dp)
                                 )
                                 Text(
