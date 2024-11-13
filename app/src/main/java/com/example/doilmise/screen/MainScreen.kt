@@ -80,17 +80,15 @@ fun MainScreen(viewModel: MainViewModel) {
 
     var showDialog by remember { mutableStateOf(false) }
 
-    val highestGrade = listOfNotNull(
-        viewModel.pm10Grade.value,
-        viewModel.pm25Grade.value,
-        viewModel.o3Grade.value
-    )
-        .maxByOrNull { it.ordinal } ?: Grade.NORMAL
+    val highestGrade = remember(pm10Grade, pm25Grade, o3Grade) {
+        listOf(pm10Grade, pm25Grade, o3Grade)
+            .filterNot { it == Grade.UNKNOWN }
+            .maxByOrNull { it.ordinal } ?: Grade.NORMAL
+    }
 
 
     // 이미지 리소스 설정
-    val imageUri = imageUris[highestGrade.name] ?: R.drawable.normal
-    Log.d("MainScreen", "Current imageUri: $imageUri")
+
 
     val airQualityInfo = when (highestGrade) {
         Grade.BEST -> Pair(R.drawable.best, Pair(Color(0xFF2b75bb), "산책가도 좋을 날씨네요!"))
@@ -113,6 +111,8 @@ fun MainScreen(viewModel: MainViewModel) {
     val backgroundColor = airQualityInfo.second.first
     val subscriptions = airQualityInfo.second.second
 
+    val imageUri = imageUris[highestGrade.name] ?: airQualityInfo.first
+    Log.d("MainScreen", "Current imageUri: $imageUri")
     val launcherForBest =
         rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
             uri?.let {

@@ -52,13 +52,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _locationPermissionGranted = MutableStateFlow(false)
     val locationPermissionGranted: StateFlow<Boolean> = _locationPermissionGranted
 
-
-    private val _stationName = MutableStateFlow<String?>(null)
-    val stationName: StateFlow<String?> = _stationName.asStateFlow()
-
-    private val _airQualityGrade = MutableStateFlow(Grade.UNKNOWN)
-    val airQualityGrade: StateFlow<Grade> = _airQualityGrade.asStateFlow()
-
     private val _pm10Grade = MutableStateFlow(Grade.UNKNOWN)
     val pm10Grade: StateFlow<Grade> = _pm10Grade.asStateFlow()
 
@@ -196,27 +189,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 o3Double <= 0.380 -> Grade.EXTREMELY_BAD
                                 else -> Grade.WORST
                             }
-//                            val grade = when (measuredValue?.pm25Value) {
-//                                "1" -> Grade.BEST
-//                                "2" -> Grade.GOOD
-//                                "3" -> Grade.FAIR
-//                                "4" -> Grade.NORMAL
-//                                "5" -> Grade.BAD
-//                                "6" -> Grade.VERY_BAD
-//                                "7" -> Grade.EXTREMELY_BAD
-//                                "8" -> Grade.WORST
-//                                else -> Grade.UNKNOWN
-//                            }
-//                            _airQualityGrade.value = grade
+                            Log.d("MainViewModel GradeCalculation", "PM10 Grade: ${_pm10Grade.value}")
+                            Log.d("MainViewModel GradeCalculation", "PM25 Grade: ${_pm25Grade.value}")
+                            Log.d("MainViewModel GradeCalculation", "O3 Grade: ${_o3Grade.value}")
 //                            // 상태 업데이트
                             _dustData.value = airQualityData
 
-                            Log.d("fetchAirQualityData", "가장 가까운 측정소: ${monitoringStation.stationName}")
-                            Log.d("fetchAirQualityData", "받아온 공기질 데이터: $measuredValue")
+                            Log.d("MainViewModel fetchAirQualityData", "가장 가까운 측정소: ${monitoringStation.stationName}")
+                            Log.d("MainViewModel fetchAirQualityData", "받아온 공기질 데이터: $measuredValue")
                         } catch (e: Exception) {
                             // 오류 발생 시 처리
                             _dustData.value = null
-                            Log.e("fetchAirQualityData", "Error fetching air quality data", e)
+                            Log.e("MainViewModel fetchAirQualityData", "Error fetching air quality data", e)
                         }
                     }
                 }
@@ -224,7 +208,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             .addOnFailureListener { e ->
                 // 위치 정보를 가져오지 못한 경우 처리
                 _dustData.value = null
-                Log.e("fetchAirQualityData", "Failed to get location", e)
+                Log.e("MainViewModel fetchAirQualityData", "Failed to get location", e)
             }
     }
 
