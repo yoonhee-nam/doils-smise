@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -71,12 +72,15 @@ fun MainScreen(viewModel: MainViewModel) {
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.initializeData()
+    }
+
     LaunchedEffect(locationPermissionGranted) {
         if (!locationPermissionGranted) {
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }
-
 
     var showDialog by remember { mutableStateOf(false) }
 
@@ -289,44 +293,54 @@ fun MainScreen(viewModel: MainViewModel) {
             }
         )
     }
+
     val swipeRefreshState =
         rememberSwipeRefreshState(isRefreshing = viewModel.isLoading.collectAsState().value)
 
     SwipeRefresh(
         state = swipeRefreshState,
         onRefresh = {
-            viewModel.fetchAirQualityData() // 스와이프 시 데이터 로드
+            viewModel.getLocation() // 스와이프 시 데이터 로드
         }
     ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(backgroundColor)
-        ) {
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(backgroundColor),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                )
-                {
-                    val dateTimeText = dustData?.dataTime ?: "데이터를 불러오는 중입니다..."
-                    //TODO{change font style }
-
-                    Text(
-                        text = locationText,
-                        fontSize = 28.sp,
-                        color = Color.White,
-                        modifier = Modifier.padding(top = 60.dp, bottom = 5.dp)
+        // 로딩 상태를 표시하기 위한 UI 추가
+        if (viewModel.isLoading.collectAsState().value) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(backgroundColor)
+            ) {
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(backgroundColor),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     )
+                    {
+                        val dateTimeText = dustData?.dataTime ?: "데이터를 불러오는 중입니다..."
+                        //TODO{change font style }
 
-                    Text(
-                        text = dateTimeText,
-                        fontSize = 16.sp,
-                        color = Color.White,
-                        modifier = Modifier.padding(bottom = 8.dp) // 아래쪽 패딩 추가
-                    )
+                        Text(
+                            text = locationText,
+                            fontSize = 28.sp,
+                            color = Color.White,
+                            modifier = Modifier.padding(top = 60.dp, bottom = 5.dp)
+                        )
+
+                        Text(
+                            text = dateTimeText,
+                            fontSize = 16.sp,
+                            color = Color.White,
+                            modifier = Modifier.padding(bottom = 8.dp) // 아래쪽 패딩 추가
+                        )
 
                         AsyncImage(
                             model = imageUri,
@@ -342,172 +356,195 @@ fun MainScreen(viewModel: MainViewModel) {
                         )
 
 
-                    Text(
-                        text = highestGrade.toString(),
-                        fontSize = 43.sp,
-                        color = Color.White,
-                        modifier = Modifier.padding(top = 20.dp, bottom = 8.dp)
-                    )
+                        Text(
+                            text = highestGrade.toString(),
+                            fontSize = 43.sp,
+                            color = Color.White,
+                            modifier = Modifier.padding(top = 20.dp, bottom = 8.dp)
+                        )
 
-                    Text(
-                        text = subscriptions,
-                        fontSize = 20.sp,
-                        color = Color.White,
-                        modifier = Modifier.padding(bottom = 10.dp)
-                    )
-                    Row(
-                        modifier = Modifier
-                            .fillParentMaxWidth()
-                            .padding(start = 20.dp, end = 20.dp),
-                    ) {
-                        Box(
+                        Text(
+                            text = subscriptions,
+                            fontSize = 20.sp,
+                            color = Color.White,
+                            modifier = Modifier.padding(bottom = 10.dp)
+                        )
+                        Row(
                             modifier = Modifier
-                                .weight(1f),
-                            contentAlignment = Alignment.Center
+                                .fillParentMaxWidth()
+                                .padding(start = 20.dp, end = 20.dp),
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = "미세먼지",
-                                    fontSize = 16.sp,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(top = 8.dp)
-                                )
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "미세먼지",
+                                        fontSize = 16.sp,
+                                        color = Color.White,
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
 
-                                val pm10AirQualityInfo = when (pm10Grade) {
-                                    Grade.BEST -> Pair(R.drawable.best, Grade.BEST.label)
-                                    Grade.GOOD -> Pair(R.drawable.good, Grade.GOOD.label)
-                                    Grade.FAIR -> Pair(R.drawable.fair, Grade.FAIR.label)
-                                    Grade.NORMAL -> Pair(R.drawable.normal, Grade.NORMAL.label)
-                                    Grade.BAD -> Pair(R.drawable.bad, Grade.BAD.label)
-                                    Grade.VERY_BAD -> Pair(R.drawable.very_bad, Grade.VERY_BAD.label)
-                                    Grade.EXTREMELY_BAD -> Pair(R.drawable.extreamly_bad, Grade.EXTREMELY_BAD.label)
-                                    Grade.WORST -> Pair(R.drawable.worst, Grade.WORST.label)
-                                    else -> Pair(R.drawable.normal, Grade.UNKNOWN.label)
+                                    val pm10AirQualityInfo = when (pm10Grade) {
+                                        Grade.BEST -> Pair(R.drawable.best, Grade.BEST.label)
+                                        Grade.GOOD -> Pair(R.drawable.good, Grade.GOOD.label)
+                                        Grade.FAIR -> Pair(R.drawable.fair, Grade.FAIR.label)
+                                        Grade.NORMAL -> Pair(R.drawable.normal, Grade.NORMAL.label)
+                                        Grade.BAD -> Pair(R.drawable.bad, Grade.BAD.label)
+                                        Grade.VERY_BAD -> Pair(
+                                            R.drawable.very_bad,
+                                            Grade.VERY_BAD.label
+                                        )
+
+                                        Grade.EXTREMELY_BAD -> Pair(
+                                            R.drawable.extreamly_bad,
+                                            Grade.EXTREMELY_BAD.label
+                                        )
+
+                                        Grade.WORST -> Pair(R.drawable.worst, Grade.WORST.label)
+                                        else -> Pair(R.drawable.normal, Grade.UNKNOWN.label)
+                                    }
+
+                                    Image(
+                                        painter = painterResource(id = pm10AirQualityInfo.first),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(50.dp) //TODO control size
+                                            .padding(5.dp)
+                                    )
+
+                                    Text(
+                                        //TODO chage text
+                                        text = pm10AirQualityInfo.second,
+                                        fontSize = 16.sp,
+                                        color = Color.White,
+                                    )
+                                    Text(
+                                        //TODO{check data / add pm25 ,5zon data make in Row}
+                                        text = "${dustData?.pm10Value}㎍/㎥",
+                                        fontSize = 13.sp,
+                                        color = Color.White,
+                                    )
                                 }
-
-                                Image(
-                                    painter = painterResource(id = pm10AirQualityInfo.first),
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(50.dp) //TODO control size
-                                        .padding(5.dp)
-                                )
-
-                                Text(
-                                    //TODO chage text
-                                    text = pm10AirQualityInfo.second,
-                                    fontSize = 16.sp,
-                                    color = Color.White,
-                                )
-                                Text(
-                                    //TODO{check data / add pm25 ,5zon data make in Row}
-                                    text = "${dustData?.pm10Value}㎍/㎥",
-                                    fontSize = 13.sp,
-                                    color = Color.White,
-                                )
                             }
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .weight(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = "초미세먼지",
-                                    fontSize = 16.sp,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(top = 8.dp)
-                                )
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "초미세먼지",
+                                        fontSize = 16.sp,
+                                        color = Color.White,
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
+                                    // 초미세먼지 (pm25) 관련 정보
+                                    val pm25AirQualityInfo = when (pm25Grade) {
+                                        Grade.BEST -> Pair(R.drawable.best, Grade.BEST.label)
+                                        Grade.GOOD -> Pair(R.drawable.good, Grade.GOOD.label)
+                                        Grade.FAIR -> Pair(R.drawable.fair, Grade.FAIR.label)
+                                        Grade.NORMAL -> Pair(R.drawable.normal, Grade.NORMAL.label)
+                                        Grade.BAD -> Pair(R.drawable.bad, Grade.BAD.label)
+                                        Grade.VERY_BAD -> Pair(
+                                            R.drawable.very_bad,
+                                            Grade.VERY_BAD.label
+                                        )
+                                        Grade.EXTREMELY_BAD -> Pair(
+                                            R.drawable.extreamly_bad,
+                                            Grade.EXTREMELY_BAD.label
+                                        )
+                                        Grade.WORST -> Pair(R.drawable.worst, Grade.WORST.label)
+                                        else -> Pair(R.drawable.normal, Grade.UNKNOWN.label)
+                                    }
 
-                                // 초미세먼지 (pm25) 관련 정보
-                                val pm25AirQualityInfo = when (pm25Grade) {
-                                    Grade.BEST -> Pair(R.drawable.best, Grade.BEST.label)
-                                    Grade.GOOD -> Pair(R.drawable.good, Grade.GOOD.label)
-                                    Grade.FAIR -> Pair(R.drawable.fair, Grade.FAIR.label)
-                                    Grade.NORMAL -> Pair(R.drawable.normal, Grade.NORMAL.label)
-                                    Grade.BAD -> Pair(R.drawable.bad, Grade.BAD.label)
-                                    Grade.VERY_BAD -> Pair(R.drawable.very_bad, Grade.VERY_BAD.label)
-                                    Grade.EXTREMELY_BAD -> Pair(R.drawable.extreamly_bad, Grade.EXTREMELY_BAD.label)
-                                    Grade.WORST -> Pair(R.drawable.worst, Grade.WORST.label)
-                                    else -> Pair(R.drawable.normal, Grade.UNKNOWN.label)
+                                    Image(
+                                        painter = painterResource(id = pm25AirQualityInfo.first),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(50.dp) //TODO control size
+                                            .padding(5.dp)
+
+                                    )
+
+                                    Text(
+                                        //TODO chage text
+                                        text = pm25AirQualityInfo.second,
+                                        fontSize = 16.sp,
+                                        color = Color.White,
+                                    )
+
+                                    Text(
+                                        //TODO{check data / add pm25 ,5zon data make in Row}
+                                        text = "${dustData?.pm25Value}㎍/㎥",
+                                        fontSize = 13.sp,
+                                        color = Color.White,
+                                    )
                                 }
-
-                                Image(
-                                    painter = painterResource(id = pm25AirQualityInfo.first),
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(50.dp) //TODO control size
-                                        .padding(5.dp)
-
-                                )
-                                Text(
-                                    //TODO chage text
-                                    text = pm25AirQualityInfo.second,
-                                    fontSize = 16.sp,
-                                    color = Color.White,
-                                )
-
-                                Text(
-                                    //TODO{check data / add pm25 ,5zon data make in Row}
-                                    text = "${dustData?.pm25Value}㎍/㎥",
-                                    fontSize = 13.sp,
-                                    color = Color.White,
-                                )
                             }
-                        }
-                        Box(
-                            modifier = Modifier
-                                .weight(1f),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Text(
-                                    text = "오존",
-                                    fontSize = 16.sp,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(top = 8.dp)
-                                )
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "오존",
+                                        fontSize = 16.sp,
+                                        color = Color.White,
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    )
 
-                                // 오존 (o3) 관련 정보
-                                val o3AirQualityInfo = when (o3Grade) {
-                                    Grade.BEST -> Pair(R.drawable.best, Grade.BEST.label)
-                                    Grade.GOOD -> Pair(R.drawable.good, Grade.GOOD.label)
-                                    Grade.FAIR -> Pair(R.drawable.fair, Grade.FAIR.label)
-                                    Grade.NORMAL -> Pair(R.drawable.normal, Grade.NORMAL.label)
-                                    Grade.BAD -> Pair(R.drawable.bad, Grade.BAD.label)
-                                    Grade.VERY_BAD -> Pair(R.drawable.very_bad, Grade.VERY_BAD.label)
-                                    Grade.EXTREMELY_BAD -> Pair(R.drawable.extreamly_bad, Grade.EXTREMELY_BAD.label)
-                                    Grade.WORST -> Pair(R.drawable.worst, Grade.WORST.label)
-                                    else -> Pair(R.drawable.normal, Grade.UNKNOWN.label)
+                                    // 오존 (o3) 관련 정보
+                                    val o3AirQualityInfo = when (o3Grade) {
+                                        Grade.BEST -> Pair(R.drawable.best, Grade.BEST.label)
+                                        Grade.GOOD -> Pair(R.drawable.good, Grade.GOOD.label)
+                                        Grade.FAIR -> Pair(R.drawable.fair, Grade.FAIR.label)
+                                        Grade.NORMAL -> Pair(R.drawable.normal, Grade.NORMAL.label)
+                                        Grade.BAD -> Pair(R.drawable.bad, Grade.BAD.label)
+                                        Grade.VERY_BAD -> Pair(
+                                            R.drawable.very_bad,
+                                            Grade.VERY_BAD.label
+                                        )
+
+                                        Grade.EXTREMELY_BAD -> Pair(
+                                            R.drawable.extreamly_bad,
+                                            Grade.EXTREMELY_BAD.label
+                                        )
+
+                                        Grade.WORST -> Pair(R.drawable.worst, Grade.WORST.label)
+                                        else -> Pair(R.drawable.normal, Grade.UNKNOWN.label)
+                                    }
+
+                                    Image(
+                                        painter = painterResource(id = o3AirQualityInfo.first),
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .size(50.dp) //TODO control size
+                                            .padding(5.dp)
+                                    )
+                                    Text(
+                                        //TODO chage text
+                                        text = o3AirQualityInfo.second,
+                                        fontSize = 16.sp,
+                                        color = Color.White,
+                                    )
+                                    Text(
+                                        //TODO{check data / add pm25 ,5zon data make in Row}
+                                        text = "${dustData?.o3Value}ppm",
+                                        fontSize = 13.sp,
+                                        color = Color.White,
+                                    )
                                 }
-
-                                Image(
-                                    painter = painterResource(id = o3AirQualityInfo.first),
-                                    contentDescription = null,
-                                    modifier = Modifier
-                                        .size(50.dp) //TODO control size
-                                        .padding(5.dp)
-                                )
-                                Text(
-                                    //TODO chage text
-                                    text = o3AirQualityInfo.second,
-                                    fontSize = 16.sp,
-                                    color = Color.White,
-                                )
-                                Text(
-                                    //TODO{check data / add pm25 ,5zon data make in Row}
-                                    text = "${dustData?.o3Value}ppm",
-                                    fontSize = 13.sp,
-                                    color = Color.White,
-                                )
                             }
                         }
                     }
@@ -516,4 +553,3 @@ fun MainScreen(viewModel: MainViewModel) {
         }
     }
 }
-

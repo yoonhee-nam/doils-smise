@@ -63,7 +63,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         loadSavedImageUris()
-        loadSomething()
+        requestLocation()
+    }
+
+    fun initializeData() {
+        _isLoading.value = true // 초기화 시 로딩 상태 true로 설정
+        if (_locationPermissionGranted.value) {
+            getLocation()
+        } else {
+            requestLocation()
+        }
     }
 
     private fun loadSomething() = viewModelScope.launch {
@@ -95,7 +104,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     // 위치 가져오기
     @SuppressLint("MissingPermission")
-    private fun getLocation() {
+    fun getLocation() {
         fusedLocationProviderClient.lastLocation
             .addOnSuccessListener { location ->
                 location?.let {
@@ -112,6 +121,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     @SuppressLint("MissingPermission")
     fun fetchAirQualityData() {
+        _isLoading.value = true
         fusedLocationProviderClient.lastLocation
             .addOnSuccessListener { location ->
                 location?.let { loc ->
@@ -194,12 +204,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             Log.d("MainViewModel GradeCalculation", "O3 Grade: ${_o3Grade.value}")
 //                            // 상태 업데이트
                             _dustData.value = airQualityData
-
+                            _isLoading.value = false
                             Log.d("MainViewModel fetchAirQualityData", "가장 가까운 측정소: ${monitoringStation.stationName}")
                             Log.d("MainViewModel fetchAirQualityData", "받아온 공기질 데이터: $measuredValue")
                         } catch (e: Exception) {
                             // 오류 발생 시 처리
                             _dustData.value = null
+                            _isLoading.value = false
                             Log.e("MainViewModel fetchAirQualityData", "Error fetching air quality data", e)
                         }
                     }
@@ -208,6 +219,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             .addOnFailureListener { e ->
                 // 위치 정보를 가져오지 못한 경우 처리
                 _dustData.value = null
+                _isLoading.value = false
                 Log.e("MainViewModel fetchAirQualityData", "Failed to get location", e)
             }
     }
