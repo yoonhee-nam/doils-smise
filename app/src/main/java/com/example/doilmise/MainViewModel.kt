@@ -65,29 +65,47 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         loadSavedImageUris()
     }
 
-    fun initializeData() {
-        _isLoading.value = true
-        checkLocationPermissionAndLoadData()
-    }
-
-    private fun checkLocationPermissionAndLoadData() {
-        if (ContextCompat.checkSelfPermission(
-                getApplication(),
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
+    fun handlePermissionGranted() {
+        viewModelScope.launch {
+            Log.d("MainViewModel", "Permission granted, starting data fetch")
             _locationPermissionGranted.value = true
-            getLocation()
-        } else {
-            _locationPermissionGranted.value = false
-            _isLoading.value = false // 권한이 없으면 로딩 상태 해제
+            _isLoading.value = true
+
+            try {
+                fetchAirQualityData()
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "Error in handlePermissionGranted", e)
+                _isLoading.value = false
+            }
         }
     }
 
-    private fun loadSomething() = viewModelScope.launch {
-        _isLoading.value = true
-        delay(1000L)
-        _isLoading.value = false
+
+    fun onPermissionGranted() {
+        viewModelScope.launch {
+            Log.d("MainViewModel", "Permission granted, starting data fetch process")
+            _locationPermissionGranted.value = true
+            _isLoading.value = true
+            try {
+                Log.d("MainViewModel", "Requesting location update")
+                getLocation()
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "Error in permission granted flow", e)
+                _isLoading.value = false
+                _locationAddress.value = "데이터를 가져올 수 없습니다."
+            }
+        }
+    }
+
+
+    fun updateLocationPermissionState(granted: Boolean) {
+        viewModelScope.launch {
+            Log.d("MainViewModel", "Updating permission state to: $granted")
+            _locationPermissionGranted.value = granted
+            if (granted) {
+                _isLoading.value = true
+            }
+        }
     }
 
     fun requestLocation() {
@@ -114,144 +132,156 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // 위치 가져오기
     @SuppressLint("MissingPermission")
     fun getLocation() {
+        if (!_locationPermissionGranted.value) {
+            Log.d("MainViewModel", "getLocation: No permission")
+            return
+        }
         _isLoading.value = true
+        Log.d("MainViewModel", "getLocation: Starting location request")
+
         fusedLocationProviderClient.lastLocation
             .addOnSuccessListener { location ->
-                location?.let {
-                    getAddress(it.latitude, it.longitude)
-                    fetchAirQualityData()
+                Log.d("MainViewModel", "Location result received: ${location != null}")
+                location?.let { loc ->
+                    viewModelScope.launch {
+                        try {
+                            getAddress(loc.latitude, loc.longitude)
+                            fetchAirQualityData()
+                            Log.d("MainViewModel", "Location and air quality data fetch initiated")
+                        } catch (e: Exception) {
+                            Log.e("MainViewModel", "Error processing location", e)
+                            _isLoading.value = false
+                            _locationAddress.value = "데이터를 가져올 수 없습니다."
+                        }
+                    }
                 } ?: run {
-                    _locationAddress.value = "위치를 가져올 수 없습니다."
+                    Log.d("MainViewModel", "Location is null")
                     _isLoading.value = false
+                    _locationAddress.value = "위치를 가져올 수 없습니다."
                 }
             }
             .addOnFailureListener { e ->
-                _locationAddress.value = e.localizedMessage ?: "위치 오류"
+                Log.e("MainViewModel", "Failed to get location", e)
                 _isLoading.value = false
+                _locationAddress.value = "위치 오류: ${e.localizedMessage}"
             }
     }
 
+
     @SuppressLint("MissingPermission")
     fun fetchAirQualityData() {
+        if (!_locationPermissionGranted.value) {
+            Log.d("MainViewModel", "fetchAirQualityData: No permission")
+            _isLoading.value = false
+            return
+        }
+
         _isLoading.value = true
+        Log.d("MainViewModel", "fetchAirQualityData: Starting to fetch data")
+
         fusedLocationProviderClient.lastLocation
             .addOnSuccessListener { location ->
                 location?.let { loc ->
                     viewModelScope.launch {
                         try {
-                            // 위치를 기반으로 가장 가까운 측정소를 가져오기
-                            val monitoringStation =
-                                Repository.getNearbyMonitoringStation(loc.latitude, loc.longitude)
+                            Log.d("MainViewModel", "fetchAirQualityData: Getting station for location ${loc.latitude}, ${loc.longitude}")
+                            val monitoringStation = Repository.getNearbyMonitoringStation(loc.latitude, loc.longitude)
 
-                            // 측정소에서 공기질 데이터
-                            val measuredValue =
-                                Repository.getLatestAirQualityData(monitoringStation!!.stationName)
+                            Log.d("MainViewModel", "fetchAirQualityData: Found station ${monitoringStation?.stationName}")
+                            // Item을 직접 받아오도록 수정
+                            val airQualityData = Repository.getLatestAirQualityData(monitoringStation?.stationName ?: return@launch)
+                            updateAirQualityData(airQualityData)
+                            Log.d("MainViewModel", "fetchAirQualityData: Data update complete")
 
-                            // 데이터를 Item 객체로 매핑하여 StateFlow에 업데이트
-                            val airQualityData = Item(
-                                coFlag = measuredValue?.coFlag ?: "데이터 없음",
-                                coGrade = measuredValue?.coGrade ?: "데이터 없음",
-                                coValue = measuredValue?.coValue ?: "데이터 없음",
-                                dataTime = measuredValue?.dataTime ?: "데이터 없음",
-                                khaiGrade = measuredValue?.khaiGrade ?: "데이터 없음",
-                                khaiValue = measuredValue?.khaiValue ?: "데이터 없음",
-                                no2Flag = measuredValue?.no2Flag ?: "데이터 없음",
-                                no2Grade = measuredValue?.no2Grade ?: "데이터 없음",
-                                no2Value = measuredValue?.no2Value ?: "데이터 없음",
-                                o3Flag = measuredValue?.o3Flag ?: "데이터 없음",
-                                o3Grade = measuredValue?.o3Grade ?: "데이터 없음",
-                                o3Value = measuredValue?.o3Value ?: "데이터 없음",
-                                pm10Flag = measuredValue?.pm10Flag ?: "데이터 없음",
-                                pm10Grade = measuredValue?.pm10Grade ?: "데이터 없음",
-                                pm10Value = measuredValue?.pm10Value ?: "데이터 없음",
-                                pm25Flag = measuredValue?.pm25Flag ?: "데이터 없음",
-                                pm25Grade = measuredValue?.pm25Grade ?: "데이터 없음",
-                                pm25Value = measuredValue?.pm25Value ?: "데이터 없음",
-                                so2Flag = measuredValue?.so2Flag ?: "데이터 없음",
-                                so2Grade = measuredValue?.so2Grade ?: "데이터 없음",
-                                so2Value = measuredValue?.so2Value ?: "데이터 없음"
-                            )
-
-                            val pm10Int = measuredValue?.pm10Value?.toIntOrNull()
-                            val pm25Int = measuredValue?.pm25Value?.toIntOrNull()
-                            val o3Double = measuredValue?.o3Value?.toDoubleOrNull()
-
-                            _pm10Grade.value = when {
-                                pm10Int == null -> Grade.UNKNOWN
-                                pm10Int <= 15 -> Grade.BEST
-                                pm10Int <= 30 -> Grade.GOOD
-                                pm10Int <= 40 -> Grade.FAIR
-                                pm10Int <= 50 -> Grade.NORMAL
-                                pm10Int <= 76 -> Grade.BAD
-                                pm10Int <= 100 -> Grade.VERY_BAD
-                                pm10Int <= 150 -> Grade.EXTREMELY_BAD
-                                else -> Grade.WORST
-                            }
-
-                            _pm25Grade.value = when {
-                                pm25Int == null -> Grade.UNKNOWN
-                                pm25Int <= 8 -> Grade.BEST
-                                pm25Int <= 15 -> Grade.GOOD
-                                pm25Int <= 20 -> Grade.FAIR
-                                pm25Int <= 25 -> Grade.NORMAL
-                                pm25Int <= 37 -> Grade.BAD
-                                pm25Int <= 50 -> Grade.VERY_BAD
-                                pm25Int <= 75 -> Grade.EXTREMELY_BAD
-                                else -> Grade.WORST
-                            }
-
-                            _o3Grade.value = when {
-                                o3Double == null -> Grade.UNKNOWN
-                                o3Double <= 0.020 -> Grade.BEST
-                                o3Double <= 0.030 -> Grade.GOOD
-                                o3Double <= 0.060 -> Grade.FAIR
-                                o3Double <= 0.090 -> Grade.NORMAL
-                                o3Double <= 0.120 -> Grade.BAD
-                                o3Double <= 0.150 -> Grade.VERY_BAD
-                                o3Double <= 0.380 -> Grade.EXTREMELY_BAD
-                                else -> Grade.WORST
-                            }
-                            Log.d(
-                                "MainViewModel GradeCalculation",
-                                "PM10 Grade: ${_pm10Grade.value}"
-                            )
-                            Log.d(
-                                "MainViewModel GradeCalculation",
-                                "PM25 Grade: ${_pm25Grade.value}"
-                            )
-                            Log.d("MainViewModel GradeCalculation", "O3 Grade: ${_o3Grade.value}")
-//                            // 상태 업데이트
-                            _dustData.value = airQualityData
-                            _isLoading.value = false
-                            Log.d(
-                                "MainViewModel fetchAirQualityData",
-                                "가장 가까운 측정소: ${monitoringStation.stationName}"
-                            )
-                            Log.d(
-                                "MainViewModel fetchAirQualityData",
-                                "받아온 공기질 데이터: $measuredValue"
-                            )
                         } catch (e: Exception) {
-                            // 오류 발생 시 처리
+                            Log.e("MainViewModel", "fetchAirQualityData: Error", e)
                             _dustData.value = null
+                            _pm10Grade.value = Grade.UNKNOWN
+                            _pm25Grade.value = Grade.UNKNOWN
+                            _o3Grade.value = Grade.UNKNOWN
+                            _locationAddress.value = "데이터를 가져올 수 없습니다."
+                        } finally {
                             _isLoading.value = false
-                            Log.e(
-                                "MainViewModel fetchAirQualityData",
-                                "Error fetching air quality data",
-                                e
-                            )
                         }
                     }
+                } ?: run {
+                    Log.d("MainViewModel", "fetchAirQualityData: Location is null")
+                    _isLoading.value = false
+                    _dustData.value = null
+                    _pm10Grade.value = Grade.UNKNOWN
+                    _pm25Grade.value = Grade.UNKNOWN
+                    _o3Grade.value = Grade.UNKNOWN
+                    _locationAddress.value = "위치를 가져올 수 없습니다."
                 }
             }
             .addOnFailureListener { e ->
-                // 위치 정보를 가져오지 못한 경우 처리
-                _dustData.value = null
+                Log.e("MainViewModel", "fetchAirQualityData: Failed to get location", e)
                 _isLoading.value = false
-                Log.e("MainViewModel fetchAirQualityData", "Failed to get location", e)
+                _dustData.value = null
+                _pm10Grade.value = Grade.UNKNOWN
+                _pm25Grade.value = Grade.UNKNOWN
+                _o3Grade.value = Grade.UNKNOWN
+                _locationAddress.value = "위치 정보 오류: ${e.localizedMessage}"
             }
     }
 
+    private fun updateAirQualityData(airQualityData: Item?) {
+        airQualityData?.let {
+            _dustData.value = it
+
+            // Grade 업데이트
+            val pm10Int = it.pm10Value.toIntOrNull()
+            val pm25Int = it.pm25Value.toIntOrNull()
+            val o3Double = it.o3Value.toDoubleOrNull()
+
+            _pm10Grade.value = when {
+                pm10Int == null -> Grade.UNKNOWN
+                pm10Int <= 15 -> Grade.BEST
+                pm10Int <= 30 -> Grade.GOOD
+                pm10Int <= 40 -> Grade.FAIR
+                pm10Int <= 50 -> Grade.NORMAL
+                pm10Int <= 76 -> Grade.BAD
+                pm10Int <= 100 -> Grade.VERY_BAD
+                pm10Int <= 150 -> Grade.EXTREMELY_BAD
+                else -> Grade.WORST
+            }
+
+            _pm25Grade.value = when {
+                pm25Int == null -> Grade.UNKNOWN
+                pm25Int <= 8 -> Grade.BEST
+                pm25Int <= 15 -> Grade.GOOD
+                pm25Int <= 20 -> Grade.FAIR
+                pm25Int <= 25 -> Grade.NORMAL
+                pm25Int <= 37 -> Grade.BAD
+                pm25Int <= 50 -> Grade.VERY_BAD
+                pm25Int <= 75 -> Grade.EXTREMELY_BAD
+                else -> Grade.WORST
+            }
+
+            _o3Grade.value = when {
+                o3Double == null -> Grade.UNKNOWN
+                o3Double <= 0.020 -> Grade.BEST
+                o3Double <= 0.030 -> Grade.GOOD
+                o3Double <= 0.060 -> Grade.FAIR
+                o3Double <= 0.090 -> Grade.NORMAL
+                o3Double <= 0.120 -> Grade.BAD
+                o3Double <= 0.150 -> Grade.VERY_BAD
+                o3Double <= 0.380 -> Grade.EXTREMELY_BAD
+                else -> Grade.WORST
+            }
+
+            Log.d("MainViewModel", "Updated PM10 Grade: ${_pm10Grade.value}")
+            Log.d("MainViewModel", "Updated PM25 Grade: ${_pm25Grade.value}")
+            Log.d("MainViewModel", "Updated O3 Grade: ${_o3Grade.value}")
+            Log.d("MainViewModel", "Air quality data updated successfully")
+        } ?: run {
+            Log.d("MainViewModel", "Air quality data is null, cannot update")
+            _dustData.value = null
+            _pm10Grade.value = Grade.UNKNOWN
+            _pm25Grade.value = Grade.UNKNOWN
+            _o3Grade.value = Grade.UNKNOWN
+        }
+    }
 
     fun updateImageUri(classification: String, uri: Uri) = viewModelScope.launch {
         val currentMap = _imageUris.value.toMutableMap()
@@ -284,17 +314,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val geocoder = Geocoder(getApplication(), Locale.KOREA)
             val addressList: List<Address>? = geocoder.getFromLocation(lat, lng, 1)
             addressList?.firstOrNull()?.let { address ->
-                val cityAbbreviation = when (val adminArea = address.adminArea) {
-                    "충청남도" -> "충남"
-                    "충청북도" -> "충북"
-                    "전라남도" -> "전남"
-                    "전라북도" -> "전북"
-                    "경상남도" -> "경남"
-                    "경상북도" -> "경북"
-                    "강원도" -> "강원"
-                    "경기도" -> "경기"
-                    else -> adminArea
-                }
                 _locationAddress.value =
                     "${address.locality} ${address.thoroughfare}"
                 Log.d("getAddress", "getAddress: ${_locationAddress.value}")
