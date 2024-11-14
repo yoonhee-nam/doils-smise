@@ -77,7 +77,10 @@ fun MainScreen(viewModel: MainViewModel) {
     }
 
     LaunchedEffect(locationPermissionGranted) {
-        if (!locationPermissionGranted) {
+        if (locationPermissionGranted) {
+            viewModel.getLocation() // 권한이 있을 때 위치 정보 요청
+        }
+        else {
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
     }

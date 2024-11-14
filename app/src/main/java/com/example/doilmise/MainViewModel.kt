@@ -63,15 +63,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         loadSavedImageUris()
-        requestLocation()
     }
 
     fun initializeData() {
-        _isLoading.value = true // 초기화 시 로딩 상태 true로 설정
-        if (_locationPermissionGranted.value) {
+        _isLoading.value = true
+        checkLocationPermissionAndLoadData()
+    }
+
+    private fun checkLocationPermissionAndLoadData() {
+        if (ContextCompat.checkSelfPermission(
+                getApplication(),
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            _locationPermissionGranted.value = true
             getLocation()
         } else {
-            requestLocation()
+            _locationPermissionGranted.value = false
+            _isLoading.value = false // 권한이 없으면 로딩 상태 해제
         }
     }
 
@@ -105,6 +114,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // 위치 가져오기
     @SuppressLint("MissingPermission")
     fun getLocation() {
+        _isLoading.value = true
         fusedLocationProviderClient.lastLocation
             .addOnSuccessListener { location ->
                 location?.let {
@@ -112,10 +122,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     fetchAirQualityData()
                 } ?: run {
                     _locationAddress.value = "위치를 가져올 수 없습니다."
+                    _isLoading.value = false
                 }
             }
             .addOnFailureListener { e ->
                 _locationAddress.value = e.localizedMessage ?: "위치 오류"
+                _isLoading.value = false
             }
     }
 
@@ -199,19 +211,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 o3Double <= 0.380 -> Grade.EXTREMELY_BAD
                                 else -> Grade.WORST
                             }
-                            Log.d("MainViewModel GradeCalculation", "PM10 Grade: ${_pm10Grade.value}")
-                            Log.d("MainViewModel GradeCalculation", "PM25 Grade: ${_pm25Grade.value}")
+                            Log.d(
+                                "MainViewModel GradeCalculation",
+                                "PM10 Grade: ${_pm10Grade.value}"
+                            )
+                            Log.d(
+                                "MainViewModel GradeCalculation",
+                                "PM25 Grade: ${_pm25Grade.value}"
+                            )
                             Log.d("MainViewModel GradeCalculation", "O3 Grade: ${_o3Grade.value}")
 //                            // 상태 업데이트
                             _dustData.value = airQualityData
                             _isLoading.value = false
-                            Log.d("MainViewModel fetchAirQualityData", "가장 가까운 측정소: ${monitoringStation.stationName}")
-                            Log.d("MainViewModel fetchAirQualityData", "받아온 공기질 데이터: $measuredValue")
+                            Log.d(
+                                "MainViewModel fetchAirQualityData",
+                                "가장 가까운 측정소: ${monitoringStation.stationName}"
+                            )
+                            Log.d(
+                                "MainViewModel fetchAirQualityData",
+                                "받아온 공기질 데이터: $measuredValue"
+                            )
                         } catch (e: Exception) {
                             // 오류 발생 시 처리
                             _dustData.value = null
                             _isLoading.value = false
-                            Log.e("MainViewModel fetchAirQualityData", "Error fetching air quality data", e)
+                            Log.e(
+                                "MainViewModel fetchAirQualityData",
+                                "Error fetching air quality data",
+                                e
+                            )
                         }
                     }
                 }
