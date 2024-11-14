@@ -349,7 +349,6 @@ fun MainScreen(viewModel: MainViewModel) {
                                 .size(300.dp)
                                 .clip(CircleShape)
                                 .clickable { showDialog = true },
-                            //TODO{chagned the background color }
                             onError = { error ->
                                 Log.e("ImageLoadError", "Error loading image: $error")
                             }
@@ -413,18 +412,17 @@ fun MainScreen(viewModel: MainViewModel) {
                                         painter = painterResource(id = pm10AirQualityInfo.first),
                                         contentDescription = null,
                                         modifier = Modifier
-                                            .size(50.dp) //TODO control size
+                                            .size(50.dp)
                                             .padding(5.dp)
                                     )
 
                                     Text(
-                                        //TODO chage text
+
                                         text = pm10AirQualityInfo.second,
                                         fontSize = 16.sp,
                                         color = Color.White,
                                     )
                                     Text(
-                                        //TODO{check data / add pm25 ,5zon data make in Row}
                                         text = "${dustData?.pm10Value}㎍/㎥",
                                         fontSize = 13.sp,
                                         color = Color.White,
@@ -468,20 +466,19 @@ fun MainScreen(viewModel: MainViewModel) {
                                         painter = painterResource(id = pm25AirQualityInfo.first),
                                         contentDescription = null,
                                         modifier = Modifier
-                                            .size(50.dp) //TODO control size
+                                            .size(50.dp)
                                             .padding(5.dp)
 
                                     )
 
                                     Text(
-                                        //TODO chage text
+
                                         text = pm25AirQualityInfo.second,
                                         fontSize = 16.sp,
                                         color = Color.White,
                                     )
 
                                     Text(
-                                        //TODO{check data / add pm25 ,5zon data make in Row}
                                         text = "${dustData?.pm25Value}㎍/㎥",
                                         fontSize = 13.sp,
                                         color = Color.White,
@@ -529,17 +526,15 @@ fun MainScreen(viewModel: MainViewModel) {
                                         painter = painterResource(id = o3AirQualityInfo.first),
                                         contentDescription = null,
                                         modifier = Modifier
-                                            .size(50.dp) //TODO control size
+                                            .size(50.dp)
                                             .padding(5.dp)
                                     )
                                     Text(
-                                        //TODO chage text
                                         text = o3AirQualityInfo.second,
                                         fontSize = 16.sp,
                                         color = Color.White,
                                     )
                                     Text(
-                                        //TODO{check data / add pm25 ,5zon data make in Row}
                                         text = "${dustData?.o3Value}ppm",
                                         fontSize = 13.sp,
                                         color = Color.White,
