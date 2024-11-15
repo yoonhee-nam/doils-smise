@@ -162,4 +162,7 @@ dependencies {
     // For local unit tests
     testImplementation (libs.hilt.android.testing)
     ksp (libs.hilt.compiler)
+
+    //admob
+    implementation (libs.play.services.ads)
 }

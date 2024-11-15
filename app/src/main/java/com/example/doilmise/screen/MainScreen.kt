@@ -738,6 +738,7 @@ fun MainScreen(viewModel: MainViewModel) {
                                     }
                                 }
                             }
+                            BannersAds()
                         }
                     }
                 }

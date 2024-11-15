@@ -25,6 +25,7 @@ lifecycleRuntimeKtxVersion = "2.8.4"
 lifecycleViewmodelCompose = "2.8.6"
 loggingInterceptor = "5.0.0"
 okhttp = "5.0.0"
+playServicesAds = "23.5.0"
 retrofit = "2.9.0"
 constraintlayout = "2.1.4"
 roomCompiler = "2.5.0"
@@ -83,6 +84,7 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 logging-interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "loggingInterceptor" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
 symbol-processing-api = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "symbolProcessingApi" }
