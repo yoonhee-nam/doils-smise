@@ -1,0 +1,64 @@
+package com.custommise.doilmise.retrofit
+
+import com.custommise.doilmise.data.airqualitypackage.Item
+import com.custommise.doilmise.retrofit.airo.AirKoreaApiService
+import com.custommise.doilmise.retrofit.kakao.KakaoLocalApiService
+import okhttp3.OkHttpClient
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.create
+
+object Repository {
+
+    private val kakaoLocalApiService: KakaoLocalApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://dapi.kakao.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(buildHttpClient())
+            .build()
+            .create()
+    }
+
+    private fun buildHttpClient(): OkHttpClient =
+        OkHttpClient.Builder()
+            .build()
+
+    suspend fun getNearbyMonitoringStation(latitude: Double, longitude: Double): com.custommise.doilmise.retrofit.airo.Item? {
+        val tmCoordinates = kakaoLocalApiService
+            .getTmCoordinates(longitude, latitude)
+            .body()
+            ?.documents
+            ?.firstOrNull()
+
+        val tmX = tmCoordinates?.x
+        val tmY = tmCoordinates?.y
+
+        return airKoreaApiService
+            .getNearbyMonitoringStation(tmX!!, tmY!!)
+            .body()
+            ?.response
+            ?.body
+            ?.items
+            // 선택한 요소를 비교해 가장 작은 값을 전달하고 null인 값은 자동으로 후순위로 밀림
+            // => 가장 가까운 측정소 하나만 받아오게 됨
+            ?.minByOrNull { it.tm ?: Double.MAX_VALUE }
+    }
+
+    private val airKoreaApiService: AirKoreaApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://apis.data.go.kr/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(buildHttpClient())
+            .build()
+            .create()
+    }
+
+    suspend fun getLatestAirQualityData(stationName: String): Item? =
+        airKoreaApiService
+            .getRealtimeAirQualities(stationName)
+            .body()
+            ?.response
+            ?.body
+            ?.items
+            ?.firstOrNull()
+}
