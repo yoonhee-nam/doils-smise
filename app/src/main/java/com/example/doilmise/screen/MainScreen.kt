@@ -150,25 +150,58 @@ fun MainScreen(viewModel: MainViewModel) {
 
     var showDialog by remember { mutableStateOf(false) }
 
-    val highestGrade = remember(pm10Grade, pm25Grade, o3Grade) {
+    val highestGrade = remember(pm10Grade, pm25Grade) {
         listOf(pm10Grade, pm25Grade)
             .filterNot { it == Grade.UNKNOWN }
             .maxByOrNull { it.ordinal } ?: Grade.NORMAL
     }
 
     val airQualityInfo = when (highestGrade) {
-        Grade.BEST -> Pair(R.drawable.best, Pair(Color(0xFF2b75bb), "오늘은 산책 하기 좋은 날씨예요!"))
-        Grade.GOOD -> Pair(R.drawable.good, Pair(Color(0xFF2899d4), "공기가 좋아 실외 활동 하기 좋습니다."))
-        Grade.FAIR -> Pair(R.drawable.fair, Pair(Color(0xFF16adc2), "공기 상태가 양호 하니 편하게 외출할 수 있습니다."))
-        Grade.NORMAL -> Pair(R.drawable.normal, Pair(Color(0xFF349043), "평소와 같이 편하게 활동하실 수 있습니다."))
-        Grade.BAD -> Pair(R.drawable.bad, Pair(Color(0xFFf68d1e), "실외 활동을 자제 하는 것이 좋겠습니다."))
-        Grade.VERY_BAD -> Pair(R.drawable.very_bad, Pair(Color(0xFFe74d25), "마스크 착용이 필요한 상황입니다."))
-        Grade.EXTREMELY_BAD -> Pair(
-            R.drawable.extreamly_bad,
-            Pair(Color(0xFFd52e2f), "실외 활동을 최대한 자제해 주시기 바랍니다.")
+        Grade.BEST -> Triple(
+            R.drawable.best,
+            Pair(Color(0xFF2b75bb), "오늘은 산책 하기 좋은 날씨예요!"),
+            Color(0xFF1a5c9e)  // Row 배경색
         )
-        Grade.WORST -> Pair(R.drawable.worst, Pair(Color(0xFF212121), "실외 활동을 최대한 자제해 주시기 바랍니다."))
-        else -> Pair(R.drawable.normal, Pair(Color(0xFFa475d5), "")) // 기본 색상
+        Grade.GOOD -> Triple(
+            R.drawable.good,
+            Pair(Color(0xFF2899d4), "공기가 좋아 실외 활동 하기 좋습니다."),
+            Color(0xFF1980b9)  // Row 배경색
+        )
+        Grade.FAIR -> Triple(
+            R.drawable.fair,
+            Pair(Color(0xFF16adc2), "공기 상태가 양호 하니 편하게 외출할 수 있습니다."),
+            Color(0xFF0f94a7)  // Row 배경색
+        )
+        Grade.NORMAL -> Triple(
+            R.drawable.normal,
+            Pair(Color(0xFF349043), "평소와 같이 편하게 활동하실 수 있습니다."),
+            Color(0xFF277734)  // Row 배경색
+        )
+        Grade.BAD -> Triple(
+            R.drawable.bad,
+            Pair(Color(0xFFf68d1e), "실외 활동을 자제 하는 것이 좋겠습니다."),
+            Color(0xFFd97915)  // Row 배경색
+        )
+        Grade.VERY_BAD -> Triple(
+            R.drawable.very_bad,
+            Pair(Color(0xFFe74d25), "마스크 착용이 필요한 상황입니다."),
+            Color(0xFFc93c16)  // Row 배경색
+        )
+        Grade.EXTREMELY_BAD -> Triple(
+            R.drawable.extreamly_bad,
+            Pair(Color(0xFFd52e2f), "실외 활동을 최대한 자제해 주시기 바랍니다."),
+            Color(0xFFb81d1e)  // Row 배경색
+        )
+        Grade.WORST -> Triple(
+            R.drawable.worst,
+            Pair(Color(0xFF212121), "실외 활동을 최대한 자제해 주시기 바랍니다."),
+            Color(0xFF141414)  // Row 배경색
+        )
+        else -> Triple(
+            R.drawable.normal,
+            Pair(Color(0xFFa475d5), ""),
+            Color(0xFF8c5cbc)  // Row 배경색
+        )
     }
     Log.d("highestGrade", "MainScreen:$highestGrade ")
 
@@ -459,9 +492,8 @@ fun MainScreen(viewModel: MainViewModel) {
                             Row(
                                 modifier = Modifier
                                     .fillParentMaxWidth()
-                                    // 배경색과 둥근 모서리 추가
                                     .background(
-                                        color = Color.Transparent,
+                                        color = airQualityInfo.third,
                                         shape = RoundedCornerShape(16.dp)
                                     )
                                     // 그림자 효과 추가
