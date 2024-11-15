@@ -59,6 +59,7 @@ import android.content.ContextWrapper
 import android.net.Uri
 import android.provider.Settings
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
@@ -73,7 +74,6 @@ fun MainScreen(viewModel: MainViewModel) {
     val pm10Grade by viewModel.pm10Grade.collectAsState()
     val pm25Grade by viewModel.pm25Grade.collectAsState()
     val o3Grade by viewModel.o3Grade.collectAsState()
-
     val dustData by viewModel.dustData.collectAsState()
     val locationText by viewModel.locationAddress.observeAsState("위치 정보를 로딩 중입니다...")
     val imageUris by viewModel.imageUris.collectAsState()
@@ -97,6 +97,7 @@ fun MainScreen(viewModel: MainViewModel) {
             Toast.makeText(context, "위치 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
         }
     }
+
     fun requestLocationPermission() {
         when {
             // 권한이 이미 허용된 경우
@@ -140,7 +141,6 @@ fun MainScreen(viewModel: MainViewModel) {
             }
         }
     }
-
     LaunchedEffect(locationPermissionGranted) {
         Log.d("MainScreen", "Permission state changed: $locationPermissionGranted")
         if (locationPermissionGranted) {
@@ -149,7 +149,6 @@ fun MainScreen(viewModel: MainViewModel) {
     }
 
     var showDialog by remember { mutableStateOf(false) }
-
     val highestGrade = remember(pm10Grade, pm25Grade) {
         listOf(pm10Grade, pm25Grade)
             .filterNot { it == Grade.UNKNOWN }
@@ -330,12 +329,11 @@ fun MainScreen(viewModel: MainViewModel) {
             }
         }
 
-
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = { Text(text = "공기질 상태 선택") },
-            text = { Text("이미지를 저장할 공기질 상태를 선택하세요.") },
+            title = { Text(text = "이미지 변경") },
+            text = { Text("이미지를 변경할 상태를 선택하세요.") },
             confirmButton = {
                 Column {
                     TextButton(onClick = {
@@ -440,7 +438,7 @@ fun MainScreen(viewModel: MainViewModel) {
                     item {
                         Column(
                             modifier = Modifier
-                                .fillMaxSize()
+                                .fillMaxWidth()
                                 .background(backgroundColor),
                             horizontalAlignment = Alignment.CenterHorizontally
                         )
@@ -692,7 +690,6 @@ fun MainScreen(viewModel: MainViewModel) {
                                             color = Color.White,
                                             modifier = Modifier.padding(top = 8.dp)
                                         )
-
                                         // 오존 (o3) 관련 정보
                                         val o3AirQualityInfo = when (o3Grade) {
                                             Grade.BEST -> Pair(R.drawable.best, Grade.BEST.label)
@@ -739,6 +736,14 @@ fun MainScreen(viewModel: MainViewModel) {
                                 }
                             }
                             BannersAds()
+                            Text(
+                                modifier = Modifier.padding(start = 10.dp, top = 10.dp, end = 10.dp),
+                                text = "이 어플은 한국환경공단(에어코리아)에서 제공하는 정보를 바탕으로 하며, 다양한 변수들로 인해 실제 대기농도와 차이가 있을 수 있습니다.",
+                                fontSize = 12.sp,
+                                color = Color.White.copy(alpha = 0.8f),
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.bodySmall
+                            )
                         }
                     }
                 }
