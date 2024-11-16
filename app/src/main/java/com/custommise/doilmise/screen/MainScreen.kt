@@ -62,7 +62,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.core.app.ActivityCompat
-import com.example.doilmise.R
+import com.custommise.doilmise.R
+
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
