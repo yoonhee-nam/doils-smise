@@ -479,7 +479,7 @@ fun MainScreen(viewModel: MainViewModel) {
                                 text = subscriptions,
                                 fontSize = 20.sp,
                                 color = Color.White,
-                                modifier = Modifier.padding(bottom = 10.dp)
+                                modifier = Modifier.padding( start = 20.dp ,bottom = 10.dp )
                             )
                             Row(
                                 modifier = Modifier
