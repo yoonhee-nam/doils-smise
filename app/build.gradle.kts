@@ -17,11 +17,11 @@ val properties = Properties()
 properties.load(project.rootProject.file("local.properties").inputStream())
 
 android {
-    namespace = "com.example.doilmise"
+    namespace = "com.custommise.doilmise"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.doilmise"
+        applicationId = "com.custommise.doilmise"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
