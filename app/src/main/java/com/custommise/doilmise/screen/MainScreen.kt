@@ -56,6 +56,10 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -158,41 +162,49 @@ fun MainScreen(viewModel: MainViewModel) {
             Pair(Color(0xFF2b75bb), "오늘은 산책 하기 좋은 날씨예요!"),
             Color(0xFF1a5c9e)  // Row 배경색
         )
+
         Grade.GOOD -> Triple(
             R.drawable.good,
             Pair(Color(0xFF2899d4), "공기가 좋아 실외 활동 하기 좋습니다."),
             Color(0xFF1980b9)  // Row 배경색
         )
+
         Grade.FAIR -> Triple(
             R.drawable.fair,
             Pair(Color(0xFF16adc2), "공기 상태가 양호 하니 편하게 외출할 수 있습니다."),
             Color(0xFF0f94a7)  // Row 배경색
         )
+
         Grade.NORMAL -> Triple(
             R.drawable.normal,
             Pair(Color(0xFF349043), "평소와 같이 편하게 활동하실 수 있습니다."),
             Color(0xFF277734)  // Row 배경색
         )
+
         Grade.BAD -> Triple(
             R.drawable.bad,
             Pair(Color(0xFFf68d1e), "실외 활동을 자제 하는 것이 좋겠습니다."),
             Color(0xFFd97915)  // Row 배경색
         )
+
         Grade.VERY_BAD -> Triple(
             R.drawable.very_bad,
             Pair(Color(0xFFe74d25), "마스크 착용이 필요한 상황입니다."),
             Color(0xFFc93c16)  // Row 배경색
         )
+
         Grade.EXTREMELY_BAD -> Triple(
             R.drawable.extreamly_bad,
             Pair(Color(0xFFd52e2f), "실외 활동을 최대한 자제해 주시기 바랍니다."),
             Color(0xFFb81d1e)  // Row 배경색
         )
+
         Grade.WORST -> Triple(
             R.drawable.worst,
             Pair(Color(0xFF212121), "실외 활동을 최대한 자제해 주시기 바랍니다."),
             Color(0xFF141414)  // Row 배경색
         )
+
         else -> Triple(
             R.drawable.normal,
             Pair(Color(0xFFa475d5), ""),
@@ -382,6 +394,17 @@ fun MainScreen(viewModel: MainViewModel) {
         )
     }
 
+    val shareApp = {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            val playStoreUrl = "https://play.google.com/apps/internaltest/4701339662112652443"
+            val content = "미세먼지 앱을 사용해보세요!\n아래 링크를 클릭하여 테스트에 참여하실 수 있습니다."
+            putExtra(Intent.EXTRA_TEXT, "$content\n\n$playStoreUrl")
+        }
+        val chooserTitle = "앱 공유하기"
+        context.startActivity(Intent.createChooser(intent, chooserTitle))
+    }
+
     SwipeRefresh(
         state = rememberSwipeRefreshState(isRefreshing = isLoading),
         onRefresh = {
@@ -438,8 +461,30 @@ fun MainScreen(viewModel: MainViewModel) {
                                 .fillMaxWidth()
                                 .background(backgroundColor),
                             horizontalAlignment = Alignment.CenterHorizontally
-                        )
-                        {
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 45.dp, end = 16.dp)
+                            ) {
+                                IconButton(
+                                    onClick = shareApp,
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .size(50.dp)
+                                        .background(
+                                            color = Color.White.copy(alpha = 0.2f),
+                                            shape = CircleShape
+                                        )
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Share,
+                                        contentDescription = "앱 공유하기",
+                                        tint = Color.White
+                                    )
+                                }
+                            }
+
                             val dateTimeText = dustData?.dataTime ?: "데이터를 불러오는 중입니다..."
                             Text(
                                 text = locationText,
@@ -480,7 +525,7 @@ fun MainScreen(viewModel: MainViewModel) {
                                 text = subscriptions,
                                 fontSize = 20.sp,
                                 color = Color.White,
-                                modifier = Modifier.padding( start = 20.dp ,bottom = 10.dp )
+                                modifier = Modifier.padding(start = 20.dp, bottom = 10.dp)
                             )
                             Row(
                                 modifier = Modifier
@@ -499,7 +544,10 @@ fun MainScreen(viewModel: MainViewModel) {
 
                                             // 위쪽 그림자
                                             val topGradient = Brush.verticalGradient(
-                                                colors = listOf(shadowColor.copy(alpha = 0.1f), transparentColor),
+                                                colors = listOf(
+                                                    shadowColor.copy(alpha = 0.1f),
+                                                    transparentColor
+                                                ),
                                                 startY = 0f,
                                                 endY = shadowRadius
                                             )
@@ -511,19 +559,28 @@ fun MainScreen(viewModel: MainViewModel) {
 
                                             // 아래쪽 그림자
                                             val bottomGradient = Brush.verticalGradient(
-                                                colors = listOf(transparentColor, shadowColor.copy(alpha = 0.1f)),
+                                                colors = listOf(
+                                                    transparentColor,
+                                                    shadowColor.copy(alpha = 0.1f)
+                                                ),
                                                 startY = size.height - shadowRadius,
                                                 endY = size.height
                                             )
                                             drawRect(
                                                 brush = bottomGradient,
-                                                topLeft = Offset(0f, size.height - shadowRadius + shadowOffset),
+                                                topLeft = Offset(
+                                                    0f,
+                                                    size.height - shadowRadius + shadowOffset
+                                                ),
                                                 size = Size(size.width, shadowRadius)
                                             )
 
                                             // 왼쪽 그림자
                                             val leftGradient = Brush.horizontalGradient(
-                                                colors = listOf(shadowColor.copy(alpha = 0.1f), transparentColor),
+                                                colors = listOf(
+                                                    shadowColor.copy(alpha = 0.1f),
+                                                    transparentColor
+                                                ),
                                                 startX = 0f,
                                                 endX = shadowRadius
                                             )
@@ -535,19 +592,25 @@ fun MainScreen(viewModel: MainViewModel) {
 
                                             // 오른쪽 그림자
                                             val rightGradient = Brush.horizontalGradient(
-                                                colors = listOf(transparentColor, shadowColor.copy(alpha = 0.1f)),
+                                                colors = listOf(
+                                                    transparentColor,
+                                                    shadowColor.copy(alpha = 0.1f)
+                                                ),
                                                 startX = size.width - shadowRadius,
                                                 endX = size.width
                                             )
                                             drawRect(
                                                 brush = rightGradient,
-                                                topLeft = Offset(size.width - shadowRadius + shadowOffset, 0f),
+                                                topLeft = Offset(
+                                                    size.width - shadowRadius + shadowOffset,
+                                                    0f
+                                                ),
                                                 size = Size(shadowRadius, size.height)
                                             )
                                         }
                                     }
                                     .padding(16.dp) // 내부 패딩 추가
-                            )  {
+                            ) {
                                 Box(
                                     modifier = Modifier
                                         .weight(1f),
@@ -738,7 +801,11 @@ fun MainScreen(viewModel: MainViewModel) {
                                 BannersAds()
                             }
                             Text(
-                                modifier = Modifier.padding(start = 10.dp, top = 10.dp, end = 10.dp),
+                                modifier = Modifier.padding(
+                                    start = 10.dp,
+                                    top = 10.dp,
+                                    end = 10.dp
+                                ),
                                 text = "이 어플은 한국환경공단(에어코리아)에서 제공하는 정보를 바탕으로 하며, 다양한 변수들로 인해 실제 대기농도와 차이가 있을 수 있습니다.",
                                 fontSize = 12.sp,
                                 color = Color.White.copy(alpha = 0.8f),
