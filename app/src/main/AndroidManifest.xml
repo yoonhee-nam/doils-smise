@@ -21,7 +21,7 @@
         <!-- Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713 -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            android:value="ca-app-pub-1262117804164162~3128825907"/>
 
         <meta-data android:name="api_key" android:value="{$api_key}"/>
         <meta-data android:name="kakao_key" android:value="{kakao_key}"/>

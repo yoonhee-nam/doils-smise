@@ -29,8 +29,10 @@ android {
 
         buildConfigField("String", "api_key", properties.getProperty("api_key"))
         buildConfigField("String", "kakao_key", properties.getProperty("kakao_key"))
+        buildConfigField("String", "ad_id", properties.getProperty("ad_id"))
         manifestPlaceholders["api_key"] = properties.getProperty("api_key")
         manifestPlaceholders["kakao_key"] = properties.getProperty("kakao_key")
+        manifestPlaceholders["ad_id"] = properties.getProperty("ad_id")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
