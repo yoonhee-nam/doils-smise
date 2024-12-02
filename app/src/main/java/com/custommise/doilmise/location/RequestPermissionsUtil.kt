@@ -14,6 +14,15 @@ class RequestPermissionsUtil(mContext: Context) {
     private val context = mContext
 
     private val REQUEST_LOCATION = 1
+    private val REQUEST_NOTIFICATION = 2
+
+    /** 알림 권한 (Android 13 이상)**/
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private val permissionsNotification = arrayOf(
+        Manifest.permission.POST_NOTIFICATIONS
+    )
+
+
 
     /** 위치 권한 SDK 버전 29 이상**/
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -71,6 +80,23 @@ class RequestPermissionsUtil(mContext: Context) {
         }
     }
 
+    /** 알림 권한 요청 **/
+    fun requestNotification() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    context as Activity,
+                    permissionsNotification,
+                    REQUEST_NOTIFICATION
+                )
+            }
+        }
+    }
+
     /**위치권한 허용 여부 검사**/
     fun isLocationPermitted(): Boolean {
         if (Build.VERSION.SDK_INT >= 29) {
@@ -96,5 +122,26 @@ class RequestPermissionsUtil(mContext: Context) {
         }
 
         return true
+    }
+    /** 알림 권한 허용 여부 검사 **/
+    fun isNotificationPermitted(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true // Android 13 미만에서는 별도의 알림 권한이 필요 없음
+        }
+    }
+
+    fun requestAllPermissions() {
+        requestLocation()
+        requestNotification()
+    }
+
+    /** 모든 권한 허용 여부 검사 **/
+    fun areAllPermissionsGranted(): Boolean {
+        return isLocationPermitted() && isNotificationPermitted()
     }
 }

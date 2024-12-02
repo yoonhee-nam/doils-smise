@@ -3,17 +3,20 @@ package com.custommise.doilmise
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Address
 import android.location.Geocoder
 import android.net.Uri
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.custommise.doilmise.data.AirQualityNotificationManager
 import com.custommise.doilmise.data.AppDatabase
 import com.custommise.doilmise.data.Grade
 import com.custommise.doilmise.data.ImageEntity
@@ -29,6 +32,33 @@ import java.util.Locale
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val imageDao = AppDatabase.getInstance(application).imageDao()
+
+    private val _showSnackbar = MutableStateFlow(false)
+    val showSnackbar = _showSnackbar.asStateFlow()
+
+    fun showSnackbarMessage() {
+        _showSnackbar.value = true
+    }
+
+    private lateinit var notificationManager: AirQualityNotificationManager
+    private var notificationPermissionGranted = mutableStateOf(false)
+
+    fun initialize(context: Context) {
+        notificationManager = AirQualityNotificationManager(context)
+    }
+
+    fun updateNotificationPermissionState(granted: Boolean) {
+        notificationPermissionGranted.value = granted
+    }
+
+    private fun checkAirQualityAndNotify(grade: Grade) {
+        if (notificationPermissionGranted.value && grade >= Grade.BAD) {
+            notificationManager.showAirQualityAlert(
+                grade = grade,
+                location = _locationAddress.value ?: "현재 위치"
+            )
+        }
+    }
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading = _isLoading.asStateFlow()
@@ -62,7 +92,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         loadSavedImageUris()
+
     }
+
 
     fun handlePermissionGranted() {
         viewModelScope.launch {
@@ -184,12 +216,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     viewModelScope.launch {
                         try {
                             Log.d("MainViewModel", "fetchAirQualityData: Getting station for location ${loc.latitude}, ${loc.longitude}")
+
                             val monitoringStation = Repository.getNearbyMonitoringStation(loc.latitude, loc.longitude)
 
                             Log.d("MainViewModel", "fetchAirQualityData: Found station ${monitoringStation?.stationName}")
-                            // Item을 직접 받아오도록 수정
                             val airQualityData = Repository.getLatestAirQualityData(monitoringStation?.stationName ?: return@launch)
                             updateAirQualityData(airQualityData)
+
+                            // 데이터 업데이트 후 대기질 체크하고 알림 표시
+                            val highestGrade = maxOf(
+                                _pm10Grade.value,
+                                _pm25Grade.value,
+                                _o3Grade.value
+                            )
+
+                            if (highestGrade >= Grade.BAD) {
+                                notificationManager.showAirQualityAlert(
+                                    grade = highestGrade,
+                                    location = _locationAddress.value ?: "현재 위치"
+                                )
+                            }
+
+                            checkAirQualityAndNotify(highestGrade)
+
                             Log.d("MainViewModel", "fetchAirQualityData: Data update complete")
 
                         } catch (e: Exception) {
