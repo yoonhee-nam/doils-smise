@@ -161,55 +161,55 @@ fun MainScreen(viewModel: MainViewModel) {
         Grade.BEST -> Triple(
             R.drawable.best,
             Pair(Color(0xFF2b75bb), "오늘은 산책 하기 좋은 날씨예요!"),
-            Color(0xFF1a5c9e)  // Row 배경색
+            Color(0xFF1a5c9e)
         )
 
         Grade.GOOD -> Triple(
             R.drawable.good,
             Pair(Color(0xFF2899d4), "공기가 좋아 실외 활동 하기 좋습니다."),
-            Color(0xFF1980b9)  // Row 배경색
+            Color(0xFF1980b9)
         )
 
         Grade.FAIR -> Triple(
             R.drawable.fair,
             Pair(Color(0xFF16adc2), "공기 상태가 양호 하니 편하게 외출할 수 있습니다."),
-            Color(0xFF0f94a7)  // Row 배경색
+            Color(0xFF0f94a7)
         )
 
         Grade.NORMAL -> Triple(
             R.drawable.normal,
             Pair(Color(0xFF349043), "평소와 같이 편하게 활동하실 수 있습니다."),
-            Color(0xFF277734)  // Row 배경색
+            Color(0xFF277734)
         )
 
         Grade.BAD -> Triple(
             R.drawable.bad,
             Pair(Color(0xFFf68d1e), "실외 활동을 자제 하는 것이 좋겠습니다."),
-            Color(0xFFd97915)  // Row 배경색
+            Color(0xFFd97915)
         )
 
         Grade.VERY_BAD -> Triple(
             R.drawable.very_bad,
             Pair(Color(0xFFe74d25), "마스크 착용이 필요한 상황입니다."),
-            Color(0xFFc93c16)  // Row 배경색
+            Color(0xFFc93c16)
         )
 
         Grade.EXTREMELY_BAD -> Triple(
             R.drawable.extreamly_bad,
             Pair(Color(0xFFd52e2f), "실외 활동을 최대한 자제해 주시기 바랍니다."),
-            Color(0xFFb81d1e)  // Row 배경색
+            Color(0xFFb81d1e)
         )
 
         Grade.WORST -> Triple(
             R.drawable.worst,
             Pair(Color(0xFF212121), "실외 활동을 최대한 자제해 주시기 바랍니다."),
-            Color(0xFF141414)  // Row 배경색
+            Color(0xFF141414)
         )
 
         else -> Triple(
             R.drawable.normal,
             Pair(Color(0xFFa475d5), ""),
-            Color(0xFF8c5cbc)  // Row 배경색
+            Color(0xFF8c5cbc)
         )
     }
     Log.d("highestGrade", "MainScreen:$highestGrade ")
@@ -463,15 +463,26 @@ fun MainScreen(viewModel: MainViewModel) {
                                 .background(backgroundColor),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
+
+                            val dateTimeText = dustData?.dataTime ?: "데이터를 불러오는 중입니다..."
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 45.dp, end = 16.dp)
+                                    .padding(top = 60.dp, bottom = 5.dp)
                             ) {
+                                Text(
+                                    text = locationText,
+                                    fontSize = 28.sp,
+                                    color = Color.White,
+                                    modifier = Modifier
+                                        .align(Alignment.Center)
+                                )
+
                                 IconButton(
                                     onClick = shareApp,
                                     modifier = Modifier
-                                        .align(Alignment.TopEnd)
+                                        .align(Alignment.CenterEnd)
+                                        .padding(end = 16.dp)
                                         .size(50.dp)
                                         .background(
                                             color = Color.White.copy(alpha = 0.2f),
@@ -486,12 +497,11 @@ fun MainScreen(viewModel: MainViewModel) {
                                 }
                             }
 
-                            val dateTimeText = dustData?.dataTime ?: "데이터를 불러오는 중입니다..."
                             Text(
-                                text = locationText,
-                                fontSize = 28.sp,
+                                text = dateTimeText,
+                                fontSize = 16.sp,
                                 color = Color.White,
-                                modifier = Modifier.padding(top = 60.dp, bottom = 5.dp)
+                                modifier = Modifier.padding(bottom = 8.dp)
                             )
 
                             Text(
