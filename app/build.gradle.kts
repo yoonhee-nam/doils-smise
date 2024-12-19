@@ -24,8 +24,8 @@ android {
         applicationId = "com.custommise.doilmise"
         minSdk = 24
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.2"
+        versionCode = 4
+        versionName = "1.4"
 
         buildConfigField("String", "api_key", properties.getProperty("api_key"))
         buildConfigField("String", "kakao_key", properties.getProperty("kakao_key"))
