@@ -399,7 +399,7 @@ fun MainScreen(viewModel: MainViewModel) {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             val playStoreUrl = "https://play.google.com/apps/internaltest/4701339662112652443"
-            val content = "미세먼지 앱을 사용해보세요!\n아래 링크를 클릭하여 테스트에 참여하실 수 있습니다."
+            val content = "미세먼지 앱을 사용해보세요!\n https://play.google.com/store/apps/details?id=com.custommise.doilmise"
             putExtra(Intent.EXTRA_TEXT, "$content\n\n$playStoreUrl")
         }
         val chooserTitle = "앱 공유하기"
@@ -497,18 +497,12 @@ fun MainScreen(viewModel: MainViewModel) {
                                 }
                             }
 
-                            Text(
-                                text = dateTimeText,
-                                fontSize = 16.sp,
-                                color = Color.White,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
 
                             Text(
                                 text = dateTimeText,
                                 fontSize = 16.sp,
                                 color = Color.White,
-                                modifier = Modifier.padding(bottom = 8.dp) // 아래쪽 패딩 추가
+                                modifier = Modifier.padding(bottom = 8.dp)
                             )
 
                             AsyncImage(

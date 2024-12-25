@@ -69,7 +69,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _locationDistance = MutableLiveData<String>()
     val locationDistance: LiveData<String> get() = _locationDistance
 
-    private val _locationAddress = MutableLiveData<String>()
+    private val _locationAddress = MutableLiveData<String>().apply {
+        value = "위치 정보를 로딩 중입니다..."
+    }
     val locationAddress: LiveData<String> get() = _locationAddress
 
     private val _imageUris = MutableStateFlow<Map<String, Uri?>>(emptyMap())
@@ -361,16 +363,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         try {
             val geocoder = Geocoder(getApplication(), Locale.KOREA)
             val addressList: List<Address>? = geocoder.getFromLocation(lat, lng, 1)
-            addressList?.firstOrNull()?.let { address ->
-                _locationAddress.value =
-                    "${address.locality} ${address.thoroughfare}"
-                Log.d("getAddress", "getAddress: ${_locationAddress.value}")
-                _locationAddress.value = _locationAddress.value.toString()
-            } ?: run {
-                _locationAddress.value = "주소를 가져 올 수 없습니다."
-            }
+            _locationAddress.value = addressList?.firstOrNull()?.let { address ->
+                "${address.locality ?: ""} ${address.thoroughfare ?: ""}"
+                    .trim()
+                    .ifEmpty { "주소를 확인할 수 없습니다." }
+            } ?: "주소를 가져올 수 없습니다."
         } catch (e: IOException) {
-            _locationAddress.value = "주소를 가져 올 수 없습니다."
+            Log.e("MainViewModel", "getAddress error", e)
+            _locationAddress.value = "주소를 가져올 수 없습니다."
         }
     }
 }
