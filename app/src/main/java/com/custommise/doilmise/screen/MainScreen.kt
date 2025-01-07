@@ -468,7 +468,7 @@ fun MainScreen(viewModel: MainViewModel) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(top = 60.dp, bottom = 5.dp)
+                                    .padding(top = 30.dp, bottom = 5.dp)
                             ) {
                                 Text(
                                     text = locationText,
